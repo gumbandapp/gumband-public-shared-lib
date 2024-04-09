@@ -113,9 +113,10 @@ pipelines:
     main:
       - step: *code-quality
       - step: *test-coverage
-      # - step: *publish-npm-latest
+      - step: *publish-npm-latest
     dev:
       - step: *code-quality
+      - step: *test-coverage
     'release/*':
       - step: *code-quality
       - step: *test-coverage
@@ -124,11 +125,5 @@ pipelines:
   pull-requests:
     '**':
       - step: *code-quality
-    'feature/*':
-      - step: *code-quality
-    'alpha/*':
-      - step: *code-quality
-      - step:
-          <<: *publish-npm-alpha
-          trigger: manual
+      - step: *test-coverage
 
