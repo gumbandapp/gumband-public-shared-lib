@@ -4,7 +4,8 @@
   "description": "A publicly shared library package for the Gumband Ecosystem",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\""
+    "test": "echo \"Error: no test specified\"",
+    "depcheck": "depcheck"
   },
   "author": "",
   "license": "ISC",
