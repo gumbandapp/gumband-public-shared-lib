@@ -4,9 +4,7 @@ definitions:
   images:
    - image_node_18:
        image: &image-node-18
-         name: us-central1-docker.pkg.dev/gumband-devops/main/devops/node-18:latest
-         username: _json_key
-         password: '$PIPE_DOCKER_REPO_READER_KEY'
+         name: node:lts-bullseye-slim
          run-as-user: 1000
   steps:
     - step: &code-quality
