@@ -12,8 +12,7 @@ definitions:
         image: *image-node-18
         script:
           - npm ci # Other packages use a custom setup:ci which also contains a call to npm run login:npm:gcp
-          - npm i -g depcheck
-          - depcheck
+          - npm run depcheck
           - npm audit
           - npm run lint
           - npm run build
