@@ -126,4 +126,7 @@ pipelines:
     '**':
       - step: *code-quality
       - step: *test-coverage
+      - step:
+          <<: *publish-npm-alpha
+          trigger: manual
 
