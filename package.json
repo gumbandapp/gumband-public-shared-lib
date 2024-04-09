@@ -3,6 +3,10 @@
   "version": "0.0.1",
   "description": "A publicly shared library package for the Gumband Ecosystem",
   "main": "index.js",
+  "files": [
+    "dist/**/*",
+    "src/**/*"
+  ],
   "scripts": {
     "build": "echo \"No build script yet, will eventually run `tsc`\"",
     "coverage:web": "echo \"No coverage:web yet: will eventually run `open coverage/lcov-report/index.html && jest --coverage`\"",
@@ -13,6 +17,14 @@
   },
   "author": "",
   "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@bitbucket.org/deeplocal/gumband-public-shared-lib.git"
+  },
+  "bugs": {
+    "url": "https://bitbucket.org/deeplocal/gumband-public-shared-lib/issues"
+  },
+  "homepage": "https://bitbucket.org/deeplocal/gumband-public-shared-lib#readme",
   "devDependencies": {
     "depcheck": "^1.4.7"
   }
