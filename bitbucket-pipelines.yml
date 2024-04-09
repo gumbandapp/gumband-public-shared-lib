@@ -1,0 +1,139 @@
+definitions:
+  docker:
+    memory: 2120
+  images:
+   - image_node_18:
+       image: &image-node-18
+         name: us-central1-docker.pkg.dev/gumband-devops/main/devops/node-18:latest
+         username: _json_key
+         password: '$PIPE_DOCKER_REPO_READER_KEY'
+         run-as-user: 1000
+  steps:
+    - step: &code-quality
+        name: "QC: Depcheck, Audit, Lint, Build, UTest"
+        image: *image-node-18
+        script:
+          - echo "${PIPE_GUMBAND_SA_KEY}" | base64 -d > "${PIPE_GUMBAND_SA_KEY_FILE}"
+          - gcloud auth activate-service-account --key-file "${PIPE_GUMBAND_SA_KEY_FILE}"
+          - npm ci # Other packages use a custom setup:ci which also contains a call to npm run login:npm:gcp
+          - depcheck
+          - npm audit 
+          - npm run lint
+          - npm run build
+          - npm run test
+    - step: &test-coverage
+        name: "QC: Test Coverage"
+        image: *image-node-18
+        script:
+          - echo "${PIPE_GUMBAND_SA_KEY}" | base64 -d > "${PIPE_GUMBAND_SA_KEY_FILE}"
+          - gcloud auth activate-service-account --key-file "${PIPE_GUMBAND_SA_KEY_FILE}"
+          - npm ci # Other packages use a custom setup:ci which also contains a call to npm run login:npm:gcp
+          - npm run coverage # this DOES duplicate the npm test above, however it takes into account coverage, ensuring that these is a difference between failing because a pipeline because a test is failing, or failing because testing thresholds were not met
+    - step: &publish-npm-alpha
+        name: Publish to NPM (alpha release)
+        image: node:lts-slim
+        script:
+          - apt-get update && apt-get install git software-properties-common build-essential -y tree -y
+          - echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > .npmrc
+          - mkdir -p ~/.ssh
+          - echo $SSH_KEY | base64 --decode > ~/.ssh/id_rsa # pull in our key that lets us do the next step
+          - chmod 600 ~/.ssh/id_rsa # set the proper permissions
+          - npm ci
+          - npm run build
+          - npm --no-git-tag-version version prepatch
+          - git add package.json package-lock.json
+          - NEW_VERSION=$(node -p "require('./package.json').version")
+          - git commit -m "Release PATCH version $NEW_VERSION [skip ci]"  # v important to have the skip ci so we don't create a recursive build loop
+          - git tag -am "Release PATCH version $NEW_VERSION" "$NEW_VERSION" 
+          # Remove the old beta tag
+          - git tag -d alpha || true  # delete the local 'beta' tag (if it exists)
+          - git push origin :refs/tags/alpha || true  # delete the remote 'beta' tag (if it exists)
+          - pipe: atlassian/npm-publish:0.3.0
+            variables:
+              EXTRA_ARGS: '--tag alpha'
+              DEBUG: 'true'
+              NPM_TOKEN: $NPM_TOKEN
+          #  Apply the new beta tag, now that we know the publish was successful
+          - git tag -a "alpha" -m "Release PATCH version $NEW_VERSION"
+          - git push && git push --tags
+    - step: &publish-npm-beta
+        name: Publish to NPM (beta release)
+        image: node:lts-slim
+        script:
+          - apt-get update && apt-get install git software-properties-common build-essential -y tree -y
+          - echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > .npmrc
+          - mkdir -p ~/.ssh
+          - echo $SSH_KEY | base64 --decode > ~/.ssh/id_rsa # pull in our key that lets us do the next step
+          - chmod 600 ~/.ssh/id_rsa # set the proper permissions
+          - npm ci
+          - npm run build
+          - npm --no-git-tag-version version prepatch
+          - git add package.json package-lock.json
+          - NEW_VERSION=$(node -p "require('./package.json').version")
+          - git commit -m "Release PATCH version $NEW_VERSION [skip ci]"  # v important to have the skip ci so we don't create a recursive build loop
+          - git tag -am "Release PATCH version $NEW_VERSION" "$NEW_VERSION" 
+          # Remove the old beta tag
+          - git tag -d beta || true  # delete the local 'beta' tag (if it exists)
+          - git push origin :refs/tags/beta || true  # delete the remote 'beta' tag (if it exists)
+          - pipe: atlassian/npm-publish:0.3.0
+            variables:
+              EXTRA_ARGS: '--tag beta'
+              DEBUG: 'true'
+              NPM_TOKEN: $NPM_TOKEN
+          #  Apply the new beta tag, now that we know the publish was successful
+          - git tag -a "beta" -m "Release PATCH version $NEW_VERSION"
+          - git push && git push --tags
+    - step: &publish-npm-latest
+        name: Publish to NPM (latest release)
+        image: node:lts-slim
+        script:
+          - apt-get update && apt-get install git software-properties-common build-essential -y
+          - echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > .npmrc
+          - mkdir -p ~/.ssh
+          - echo $SSH_KEY | base64 --decode > ~/.ssh/id_rsa # pull in our key that lets us do the next step
+          - chmod 600 ~/.ssh/id_rsa # set the proper permissions
+          - npm --no-git-tag-version version patch --tag latest
+          - git add package.json package-lock.json
+          - NEW_VERSION=$(node -p "require('./package.json').version")
+          - git commit -m "Release PATCH version $NEW_VERSION [skip ci]"  # v important to have the skip ci so we don't create a recursive build loop
+          - git tag -am "Release PATCH version $NEW_VERSION" "$NEW_VERSION"
+          - npm ci
+          - npm run build
+          # Remove old "latest" tag if it exists
+          - git tag -d latest || true  
+          - git push origin :refs/tags/latest || true
+          - pipe: atlassian/npm-publish:0.3.0
+            variables:
+              EXTRA_ARGS: '--tag latest'
+              NPM_TOKEN: $NPM_TOKEN
+              DEBUG: 'true'
+          # Apply the new "latest" tag, now that we know the publish was successful
+          - git tag -a "latest" -m "Release PATCH version $NEW_VERSION"
+          - git push && git push --tags
+pipelines:
+  # TODO: Do we need defaults? I would argue it only clutters things and we can run the pipeline code quality tests locally.
+  # default:
+  #   - step: *code-quality
+
+  branches:
+    main:
+      - step: *code-quality
+      - step: *publish-npm-latest
+    dev:
+      - step: *code-quality
+    'release/*':
+      - step: *code-quality
+      - step: *test-coverage
+      - step: *publish-npm-beta
+
+  pull-requests:
+    '**':
+      - step: *code-quality
+    'feature/*':
+      - step: *code-quality
+    'alpha/*':
+      - step: *code-quality
+      - step:
+          <<: *publish-npm-alpha
+          trigger: manual
+
