@@ -11,8 +11,6 @@ definitions:
         name: "QC: Depcheck, Audit, Lint, Build, UTest"
         image: *image-node-18
         script:
-          - echo "${PIPE_GUMBAND_SA_KEY}" | base64 -d > "${PIPE_GUMBAND_SA_KEY_FILE}"
-          - gcloud auth activate-service-account --key-file "${PIPE_GUMBAND_SA_KEY_FILE}"
           - npm ci # Other packages use a custom setup:ci which also contains a call to npm run login:npm:gcp
           - depcheck
           - npm audit 
@@ -23,8 +21,6 @@ definitions:
         name: "QC: Test Coverage"
         image: *image-node-18
         script:
-          - echo "${PIPE_GUMBAND_SA_KEY}" | base64 -d > "${PIPE_GUMBAND_SA_KEY_FILE}"
-          - gcloud auth activate-service-account --key-file "${PIPE_GUMBAND_SA_KEY_FILE}"
           - npm ci # Other packages use a custom setup:ci which also contains a call to npm run login:npm:gcp
           - npm run coverage # this DOES duplicate the npm test above, however it takes into account coverage, ensuring that these is a difference between failing because a pipeline because a test is failing, or failing because testing thresholds were not met
     - step: &publish-npm-alpha
@@ -116,7 +112,8 @@ pipelines:
   branches:
     main:
       - step: *code-quality
-      - step: *publish-npm-latest
+      - step: *test-coverage
+      # - step: *publish-npm-latest
     dev:
       - step: *code-quality
     'release/*':
