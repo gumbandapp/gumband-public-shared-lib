@@ -4,8 +4,12 @@
   "description": "A publicly shared library package for the Gumband Ecosystem",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\"",
-    "depcheck": "depcheck"
+    "build": "echo \"No build script yet, will eventually run `tsc`\"",
+    "coverage:web": "echo \"No coverage:web yet: will eventually run `open coverage/lcov-report/index.html && jest --coverage`\"",
+    "coverage": "echo \"No coverage yet, will eventually run `jest --coverage`\"",
+    "depcheck": "depcheck",
+    "lint": "echo \"No lint, will eventually run `eslint .`\"",
+    "test": "echo \"Error: no test specified, will eventually run `jest`\""
   },
   "author": "",
   "license": "ISC",
