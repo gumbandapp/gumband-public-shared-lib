@@ -128,15 +128,15 @@ definitions:
           - git tag -a "latest" -m "Release PATCH version $NEW_VERSION"
           - git push && git push --tags
 pipelines:
-  # TODO: Do we need defaults? I would argue it only clutters things and we can run the pipeline code quality tests locally.
-  # default:
-  #   - step: *code-quality
-
-  branches:
-    main:
+  pull-requests:
+    '**':
       - step: *code-quality
       - step: *test-coverage
-      - step: *publish-npm-latest
+      - step:
+          <<: *publish-npm-alpha
+          trigger: manual
+
+  branches:
     dev:
       - step: *code-quality
       - step: *test-coverage
@@ -145,12 +145,9 @@ pipelines:
       - step: *code-quality
       - step: *test-coverage
       - step: *publish-release-candidate
-
-  pull-requests:
-    '**':
+    main:
       - step: *code-quality
       - step: *test-coverage
-      - step:
-          <<: *publish-npm-alpha
-          trigger: manual
+      - step: *publish-npm-latest
+
 
