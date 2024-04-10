@@ -1,0 +1,58 @@
+{
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "ecmaVersion": 12,
+    "sourceType": "module",
+    "ecmaFeatures": {
+      "jsx": true,
+      "modules": true
+    }
+  },
+  "plugins": ["@typescript-eslint", "jsdoc"],
+  "extends": [
+    "eslint:recommended",
+    "plugin:@typescript-eslint/recommended",
+    "google"
+  ],
+  "env": {
+    "es6": true,
+    "browser": true,
+    "node": true,
+    "mocha": true
+  },
+  "rules": {
+    "max-len": "off",
+    "quotes": ["error", "single"],
+    "space-before-function-paren": ["error", "always"],
+    "object-curly-spacing": ["error", "always"],
+    "no-plusplus": "off",
+    "prefer-const": "error",
+    "prefer-template": "error",
+    "unicorn/filename-case": "off",
+    "radix": "off",
+    "no-use-before-define": "off",
+    "no-underscore-dangle": "off",
+    "class-methods-use-this": "off",
+    "unicorn/number-literal-case": "off",
+    "jsdoc/check-alignment": "error",
+    "jsdoc/check-param-names": 1,
+    "jsdoc/check-types": 1,
+    "jsdoc/no-undefined-types": 1,
+    "jsdoc/require-hyphen-before-param-description": 1,
+    "jsdoc/require-param": 1,
+    "jsdoc/require-param-description": 1,
+    "jsdoc/require-param-name": 1,
+    "jsdoc/require-param-type": 1,
+    "jsdoc/valid-types": 1,
+    "no-bitwise": "off",
+    "indent": [
+      "error",
+      4,
+      {
+        "SwitchCase": 1
+      }
+    ],
+    "semi": ["error", "always"],
+    "no-invalid-this": "off"
+  }
+}
