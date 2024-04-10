@@ -61,7 +61,7 @@ definitions:
           - chmod 600 ~/.ssh/id_rsa # set the proper permissions
           - npm ci
           - npm run build
-          - npm --no-git-tag-version version prepatch
+          - npm --no-git-tag-version version patch
           - git add package.json package-lock.json
           - NEW_VERSION=$(node -p "require('./package.json').version")
           - git commit -m "Release PATCH version $NEW_VERSION [skip ci]"  # v important to have the skip ci so we don't create a recursive build loop
