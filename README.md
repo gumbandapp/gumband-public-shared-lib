@@ -17,3 +17,8 @@ import { CONSTANTS } from '@deeplocal/gumband-public-shared-lib'
 
 console.log(CONSTANTS.SOCKET_CONSTANTS)
 ```
+
+
+# Varied Releases
+
+You have the possibility to install `latest`, `beta` and `alpha` packages.
