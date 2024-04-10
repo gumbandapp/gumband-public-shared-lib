@@ -137,7 +137,7 @@ pipelines:
           trigger: manual
 
   branches:
-    dev:
+    develop:
       - step: *code-quality
       - step: *test-coverage
       - step: *publish-npm-beta
