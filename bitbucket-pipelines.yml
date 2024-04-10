@@ -34,17 +34,17 @@ definitions:
           - chmod 600 ~/.ssh/id_rsa # set the proper permissions
           - npm ci
           - npm run build
-          - npm --no-git-tag-version version prerelease --preid=alpha
+          - npm --no-git-tag-version version prerelease --preid=alpha-${BITBUCKET_BRANCH}
           - git add package.json package-lock.json
           - NEW_VERSION=$(node -p "require('./package.json').version")
           - git commit -m "Release ALPHA version $NEW_VERSION [skip ci]"  # v important to have the skip ci so we don't create a recursive build loop
           - git tag -am "Release ALPHA version $NEW_VERSION" "$NEW_VERSION" 
           # Remove the old beta tag
-          - git tag -d alpha || true  # delete the local 'beta' tag (if it exists)
-          - git push origin :refs/tags/alpha || true  # delete the remote 'beta' tag (if it exists)
+          - git tag -d alpha || true  
+          - git push origin :refs/tags/alpha || true 
           - pipe: atlassian/npm-publish:0.3.0
             variables:
-              EXTRA_ARGS: '--tag alpha'
+              EXTRA_ARGS: '--tag alpha-${BITBUCKET_BRANCH}'
               DEBUG: 'true'
               NPM_TOKEN: $NPM_TOKEN
           #  Apply the new beta tag, now that we know the publish was successful
