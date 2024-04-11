@@ -1,6 +1,6 @@
 {
   "name": "@deeplocal/gumband-public-shared-lib",
-  "version": "0.0.6-alpha-test-branch.0",
+  "version": "0.0.6",
   "description": "A publicly shared library package for the Gumband Ecosystem",
   "main": "index.js",
   "files": [
