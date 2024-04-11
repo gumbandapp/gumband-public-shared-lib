@@ -118,11 +118,9 @@ pipelines:
       - step: *code-quality
       - step: *test-coverage
       - step: *publish-npm-beta
-    'release/*':
+    main:
       - step: *code-quality
       - step: *test-coverage
-      - step: *publish-release-candidate
-    main:
       - step: *publish-npm-latest
     hotfix/*:
       - step: *code-quality

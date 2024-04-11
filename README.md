@@ -29,6 +29,7 @@ You have the possibility to install `latest`, `beta` and `alpha` packages.
 
 
 # Nightly/Beta Releases
+
 `npm install @deeplocal/gumband-public-shared-lib@beta` will get you the nightly release of our develop branch
 
 # Unstable/Alpha Releases
