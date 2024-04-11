@@ -3,7 +3,7 @@
 # Learn more about .gitignore:
 #     https://www.atlassian.com/git/tutorials/saving-changes/gitignore
 
-# Ignore test coverage reports
+# Ignore Coverage Reports
 coverage/
 
 # Node artifact files
@@ -51,3 +51,4 @@ Thumbs.db
 *.mov
 *.wmv
 
+.env

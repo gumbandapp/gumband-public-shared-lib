@@ -34,17 +34,17 @@ definitions:
           - chmod 600 ~/.ssh/id_rsa # set the proper permissions
           - npm ci
           - npm run build
-          - npm --no-git-tag-version version prepatch
+          - npm --no-git-tag-version version prerelease --preid=alpha-${BITBUCKET_BRANCH}
           - git add package.json package-lock.json
           - NEW_VERSION=$(node -p "require('./package.json').version")
-          - git commit -m "Release PATCH version $NEW_VERSION [skip ci]"  # v important to have the skip ci so we don't create a recursive build loop
-          - git tag -am "Release PATCH version $NEW_VERSION" "$NEW_VERSION" 
+          - git commit -m "Release ALPHA version $NEW_VERSION [skip ci]"  # v important to have the skip ci so we don't create a recursive build loop
+          - git tag -am "Release ALPHA version $NEW_VERSION" "$NEW_VERSION" 
           # Remove the old beta tag
-          - git tag -d alpha || true  # delete the local 'beta' tag (if it exists)
-          - git push origin :refs/tags/alpha || true  # delete the remote 'beta' tag (if it exists)
+          - git tag -d alpha || true  
+          - git push origin :refs/tags/alpha || true 
           - pipe: atlassian/npm-publish:0.3.0
             variables:
-              EXTRA_ARGS: '--tag alpha'
+              EXTRA_ARGS: '--tag alpha-${BITBUCKET_BRANCH}'
               DEBUG: 'true'
               NPM_TOKEN: $NPM_TOKEN
           #  Apply the new beta tag, now that we know the publish was successful
@@ -61,7 +61,7 @@ definitions:
           - chmod 600 ~/.ssh/id_rsa # set the proper permissions
           - npm ci
           - npm run build
-          - npm --no-git-tag-version version prepatch
+          - npm --no-git-tag-version version patch
           - git add package.json package-lock.json
           - NEW_VERSION=$(node -p "require('./package.json').version")
           - git commit -m "Release PATCH version $NEW_VERSION [skip ci]"  # v important to have the skip ci so we don't create a recursive build loop
@@ -77,6 +77,29 @@ definitions:
           #  Apply the new beta tag, now that we know the publish was successful
           - git tag -a "beta" -m "Release PATCH version $NEW_VERSION"
           - git push && git push --tags
+    - step: &publish-release-candidate
+        name: Publish to NPM (release candidate)
+        image: *image-node-18
+        script:
+          - apt-get update && apt-get install git software-properties-common build-essential -y
+          - echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > .npmrc
+          - mkdir -p ~/.ssh
+          - echo $SSH_KEY | base64 --decode > ~/.ssh/id_rsa # pull in our key that lets us do the next step
+          - chmod 600 ~/.ssh/id_rsa # set the proper permissions
+          - npm ci
+          - npm run build
+          - npm --no-git-tag-version version prerelease --preid=rc
+          - git add package.json package-lock.json
+          - NEW_VERSION=$(node -p "require('./package.json').version")
+          - git commit -m "Release RC version $NEW_VERSION [skip ci]"  # v important to have the skip ci so we don't create a recursive build loop
+          - git tag -am "Release RC version $NEW_VERSION" "$NEW_VERSION"
+          - pipe: atlassian/npm-publish:0.3.0
+            variables:
+              EXTRA_ARGS: '--tag rc'
+              DEBUG: 'true'
+              NPM_TOKEN: $NPM_TOKEN
+          - git push && git push --tags
+
     - step: &publish-npm-latest
         name: Publish to NPM (latest release)
         image: node:lts-slim
@@ -105,30 +128,24 @@ definitions:
           - git tag -a "latest" -m "Release PATCH version $NEW_VERSION"
           - git push && git push --tags
 pipelines:
-  # TODO: Do we need defaults? I would argue it only clutters things and we can run the pipeline code quality tests locally.
-  # default:
-  #   - step: *code-quality
-
-  branches:
-    main:
-      - step: *code-quality
-      - step: *test-coverage
-      # - step: *publish-npm-latest
-    dev:
-      - step: *code-quality
-    'release/*':
-      - step: *code-quality
-      - step: *test-coverage
-      - step: *publish-npm-beta
-
   pull-requests:
     '**':
       - step: *code-quality
-    'feature/*':
-      - step: *code-quality
-    'alpha/*':
-      - step: *code-quality
+      - step: *test-coverage
       - step:
           <<: *publish-npm-alpha
           trigger: manual
 
+  branches:
+    develop:
+      - step: *code-quality
+      - step: *test-coverage
+      - step: *publish-npm-beta
+    'release/*':
+      - step: *code-quality
+      - step: *test-coverage
+      - step: *publish-release-candidate
+    main:
+      - step: *publish-npm-latest
+    hotfix/*:
+      - step: *code-quality

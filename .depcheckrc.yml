@@ -1,0 +1,4 @@
+ignores:
+  - "@types/jest"
+  - "@jest/globals"
+  - "jest-mock"

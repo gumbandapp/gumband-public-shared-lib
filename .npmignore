@@ -1,0 +1,24 @@
+# .npmignore
+
+# Definitely don't want to ship node modules, that's the purpose of npm
+node_modules/
+
+# We don't want to ship coverage reports or any other test artifacts
+coverage/
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx
+
+# We don't ship source maps, so there's probably no need for the source files
+src/
+
+# Other files that we don't want to ship
+.depcheckrc.yml
+.eslintignore
+.eslistrc
+.git
+.gitignore
+bitbucket-pipelines.yml
+jest.config.js
+tsconfig.json
