@@ -140,10 +140,14 @@ pipelines:
     develop:
       - step: *code-quality
       - step: *test-coverage
-      - step: *publish-npm-beta
+      - step:
+          <<: *publish-npm-beta
+          trigger: manual
     main:
       - step: *code-quality
       - step: *test-coverage
-      - step: *publish-npm-latest
+      - step:
+         <<: *publish-npm-latest
+         trigger: manual
     hotfix/*:
       - step: *code-quality
