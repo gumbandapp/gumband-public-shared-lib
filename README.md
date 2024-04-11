@@ -22,3 +22,15 @@ console.log(CONSTANTS.SOCKET_CONSTANTS)
 # Varied Releases
 
 You have the possibility to install `latest`, `beta` and `alpha` packages.
+
+# Stable Releases
+
+`npm install @deeplocal/gumband-public-shared-lib` or `npm install @deeplocal/gumband-public-shared-lib@latest`  
+
+
+# Nightly/Beta Releases
+`npm install @deeplocal/gumband-public-shared-lib@beta` will get you the nightly release of our develop branch
+
+# Unstable/Alpha Releases
+
+`npm install @deeplocal/gumband-public-shared-lib@alpha` will get you whatever feature branch was released last, or sometimes even an adhoc branch. It is unadvised that you use these releases unless you really know what you're doing.
