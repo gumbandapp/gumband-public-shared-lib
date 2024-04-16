@@ -34,7 +34,9 @@ definitions:
           - chmod 600 ~/.ssh/id_rsa # set the proper permissions
           - npm ci
           - npm run build
-          - npm --no-git-tag-version version prerelease --preid=alpha-${BITBUCKET_BRANCH}
+          # Replace any "/" in the branchname with an "_" to prevent naming issues, save to BITBUCKET_BRANCH_CLEAN
+          - export BITBUCKET_BRANCH_CLEAN=$(echo $BITBUCKET_BRANCH | sed 's/\//-/g')
+          - npm --no-git-tag-version version prerelease --preid=alpha-${BITBUCKET_BRANCH_CLEAN}
           - git add package.json package-lock.json
           - NEW_VERSION=$(node -p "require('./package.json').version")
           - git commit -m "Release ALPHA version $NEW_VERSION [skip ci]"  # v important to have the skip ci so we don't create a recursive build loop
@@ -44,7 +46,7 @@ definitions:
           - git push origin :refs/tags/alpha || true 
           - pipe: atlassian/npm-publish:0.3.0
             variables:
-              EXTRA_ARGS: '--tag alpha-${BITBUCKET_BRANCH}'
+              EXTRA_ARGS: '--tag alpha-${BITBUCKET_BRANCH_CLEAN}'
               DEBUG: 'true'
               NPM_TOKEN: $NPM_TOKEN
           #  Apply the new beta tag, now that we know the publish was successful
