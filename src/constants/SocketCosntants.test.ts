@@ -1,10 +1,10 @@
 // Ensure SocketContants exports the right constants
 
-import { SOCKET } from './SocketConstants';
+import { SOCKETS } from './SocketConstants';
 
 describe('SocketConstants', () => {
     it('should have the correct values', () => {
-        expect(SOCKET).toEqual({
+        expect(SOCKETS).toEqual({
             HANDSHAKE: 'HANDSHAKE',
             HANDSHAKE_SUCCESSFUL: 'HANDSHAKE_SUCCESSFUL',
             SUBSCRIBE: 'SUBSCRIBE',
