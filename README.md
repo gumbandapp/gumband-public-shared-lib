@@ -36,3 +36,4 @@ This is most likely the version you want.
 ### Unstable/Alpha Releases
 
 `npm install @deeplocal/gumband-public-shared-lib@alpha` will get you whatever feature branch was released last, or sometimes even an adhoc branch. It is unadvised that you use these releases unless you really know what you're doing.
+kyle
