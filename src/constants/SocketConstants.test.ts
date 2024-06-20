@@ -1,4 +1,4 @@
-// Ensure SocketContants exports the right constants
+// Ensure SocketConstants exports the right constants
 
 import { SOCKETS } from './SocketConstants';
 
@@ -19,6 +19,7 @@ describe('SocketConstants', () => {
             FRONTEND: 'FRONTEND',
             EXHIBIT_ONLINE: 'EXHIBIT_ONLINE',
             EXHIBIT_OFFLINE: 'EXHIBIT_OFFLINE',
+            EXHIBIT_HEALTH_UPDATED: 'EXHIBIT_HEALTH_UPDATED',
             CONTROL_RECEIVED: 'CONTROL_RECEIVED',
             SETTING_RECEIVED: 'SETTING_RECEIVED',
             SETTING_LIST_RECEIVED: 'SETTING_LIST_RECEIVED',
@@ -42,11 +43,13 @@ describe('SocketConstants', () => {
             FILE_UPLOADED: 'FILE_UPLOADED',
             FILE_DELETED: 'FILE_DELETED',
             READY: 'READY',
+            HARDWARE_CONNECTION_TO_EXHIBIT_UPDATED: 'HARDWARE_CONNECTION_TO_EXHIBIT_UPDATED',
+            COMPONENT_CONNECTED: 'COMPONENT_CONNECTED',
+            COMPONENT_DISCONNECTED: 'COMPONENT_DISCONNECTED',
             SERVER_PING_MS: 10 * 1000,
             SERVER_HANDSHAKE_DISCONNECT_MS: 2 * 1000,
             SDK_OFFLINE_MS: 11 * 1000,
             SDK_RECONNECT_DELAY_MS: 3 * 1000,
-            HARDWARE_CONNECTION_TO_EXHIBIT_UPDATED: 'HARDWARE_CONNECTION_TO_EXHIBIT_UPDATED',
         });
     });
 });
