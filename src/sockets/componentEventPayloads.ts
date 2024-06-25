@@ -27,6 +27,7 @@ export const COMPONENT_TYPE = {
 export type ComponentType = ObjectValues<typeof COMPONENT_TYPE>;
 
 export type ComponentConnectedPayload = {
+    exhibitId: number,
     componentId: string | number; // uuid or number
     category: ComponentCategory;
     connectedChangedAt: string; // ISO 8601 timestamp
