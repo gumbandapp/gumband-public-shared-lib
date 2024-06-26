@@ -1,3 +1,4 @@
+import { FormattedPropertyValue } from '../types/mqtt-api';
 import type { ObjectValues } from '../utils/usefulTS';
 
 export type ExhibitOfflinePayload = {
@@ -37,7 +38,7 @@ export type ComponentDisconnectedPayload = ComponentConnectedPayload;
 
 // V2 Hardware Events
 export type HardwareProperty = {
-    value: V2JsonPropertyValue,
+    value: FormattedPropertyValue,
     format: string,
     path: string,
     source: 'system' | 'app',

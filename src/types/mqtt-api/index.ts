@@ -9,6 +9,7 @@ import type {
     V2SourceRegistrationCommonFields,
     V2SystemInfo,
     V2SystemRegistration,
+    V2JsonPropertyValue,
 } from './mqtt-api-v2';
 import {
     V2ApiSubscribedTopics,
@@ -49,6 +50,8 @@ export type AnyMQTTPayload = AnyV2MQTTPayload;
 
 export const AllPropertyTypes = [...V2PropertyTypes] as const;
 export type AnyPropertyType = (typeof AllPropertyTypes)[number];
+
+export type FormattedPropertyValue = V2JsonPropertyValue;
 
 /**
  * Type Guard for the ApiVersion
