@@ -17,6 +17,7 @@ import type {
     ExhibitOnlinePayload,
     HardwareOfflinePayload,
     HardwareOnlinePayload,
+    HardwarePropertyUpdatePayload,
 } from './componentEventPayloads';
 import type {
     ExhibitHealthStateUpdatePayload,
@@ -43,6 +44,8 @@ export type SocketEventPayloadMap = {
     EXHIBIT_ONLINE: ExhibitOnlinePayload;
     COMPONENT_CONNECTED: ComponentConnectedPayload;
     COMPONENT_DISCONNECTED: ComponentDisconnectedPayload;
+    COMPONENT_PROPERTY_RECEIVED: HardwarePropertyUpdatePayload;
+    // V1 Hardware Events
     HARDWARE_OFFLINE: HardwareOfflinePayload;
     HARDWARE_ONLINE: HardwareOnlinePayload;
     // Exhibit Events

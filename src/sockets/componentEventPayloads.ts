@@ -35,6 +35,23 @@ export type ComponentConnectedPayload = {
 
 export type ComponentDisconnectedPayload = ComponentConnectedPayload;
 
+// V2 Hardware Events
+export type HardwareProperty = {
+    value: V2JsonPropertyValue,
+    format: string,
+    path: string,
+    source: 'system' | 'app',
+    componentId: string,
+}
+
+export type HardwarePropertyUpdatePayload = {
+    exhibitId: number,
+    componentId: string,
+    category: ComponentCategory,
+    property: HardwareProperty,
+}
+
+// V1 Hardware Events
 export type HardwareOfflinePayload = {
     hardwareId: number;
 };
