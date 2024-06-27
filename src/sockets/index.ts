@@ -1,3 +1,8 @@
+
+export * from './authorizationAndSubscriptionEventPayloads';
+export * from './componentEventPayloads';
+export * from './exhibitEventPayloads';
+
 import type {
     HandshakePayload,
     SubscribeMultipleExhibitsPayload,
@@ -76,3 +81,4 @@ export type SocketEventPayloadMap = {
 export * from './authorizationAndSubscriptionEventPayloads';
 export * from './componentEventPayloads';
 export * from './exhibitEventPayloads';
+
