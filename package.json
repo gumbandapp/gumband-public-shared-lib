@@ -28,6 +28,7 @@
   "homepage": "https://bitbucket.org/deeplocal/gumband-public-shared-lib#readme",
   "devDependencies": {
     "@types/jest": "^29.5.12",
+    "@types/python-struct": "^1.0.4",
     "@typescript-eslint/eslint-plugin": "^6.19.1",
     "@typescript-eslint/parser": "^6.20.0",
     "depcheck": "^1.4.7",
@@ -37,5 +38,10 @@
     "jest": "^29.7.0",
     "ts-jest": "^29.1.2",
     "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "long": "^5.2.3",
+    "mqtt": "^5.7.3",
+    "python-struct": "^1.1.3"
   }
 }
