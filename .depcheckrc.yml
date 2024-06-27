@@ -2,3 +2,4 @@ ignores:
   - "@types/jest"
   - "@jest/globals"
   - "jest-mock"
+  - "express" # so far we only need @types/express, not the actual package itself
