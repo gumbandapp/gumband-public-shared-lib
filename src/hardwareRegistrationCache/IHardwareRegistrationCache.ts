@@ -262,7 +262,7 @@ export interface ICacheLockByComponentId {
      * @param {string} componentId - the parsed componentId from the event topic
      * @param {number} [timeoutMS] - optional automatic timeout (in ms) for the lock
      * @throws {Error} - errors if lock fails to be acquired
-    */
+     */
    lock(componentId: string, timeoutMS?: number): Promise<void>;
 
     /**
