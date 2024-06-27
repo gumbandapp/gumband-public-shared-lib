@@ -2,7 +2,20 @@ export * from './packetParser';
 import EventEmitter from 'events';
 import { isNativeError } from 'util/types';
 import { IHardwareRegistrationCache } from '../../hardwareRegistrationCache';
-import { AnySource, ApplicationInfo, PropertyRegistration, SystemInfo, V2ApiTopic, V2PropertyFormat, V2PropertyRegistration, V2Source, V2SystemInfo, V2UnpackedPropertyValue, isV2Source } from '../../types';
+import {
+    AnySource,
+    ApplicationInfo,
+    PropertyRegistration,
+    SystemInfo,
+    V2ApiTopic,
+    V2PropertyFormat,
+    V2PropertyRegistration,
+    V2Source,
+    V2SystemInfo,
+    V2UnpackedPropertyValue,
+    isV2Source,
+    V2JsonPropertyValue,
+} from '../../types';
 import { exhaustiveGuard } from '../../utils/usefulTS';
 import { lockRegistrationCacheAndPerformAction } from '../common';
 import { V2PacketParser } from './packetParser';
@@ -35,6 +48,7 @@ export type V2PropertyUpdatePayload = {
     path: string;
     format: V2PropertyFormat,
     unpackedValue: V2UnpackedPropertyValue;
+    formattedValue: V2JsonPropertyValue;
     data: Buffer;
 }
 
@@ -485,8 +499,17 @@ export class MqttApiV2 extends EventEmitter { // eslint-disable-line @typescript
         try {
             // Pass Format and buffer to parser
             const unpackedPayload = this.packetParser.parsePropertyValue(payload, registeredProperty);
-            console.log(`format: "${registeredProperty.format}", unpackedPayload: ${JSON.stringify(unpackedPayload)}, jsonPayload: ${JSON.stringify(this.packetParser.jsonFormatPropertyValue(unpackedPayload, registeredProperty))}`);
-            this.emit(V2_EVENTS.PROP_UPDATE, { componentId, source, path: registeredProperty.path, format: registeredProperty.format, data: payload, unpackedValue: unpackedPayload });
+            const formattedPayload = this.packetParser.jsonFormatPropertyValue(unpackedPayload, registeredProperty);
+            console.log(`format: "${registeredProperty.format}", unpackedPayload: ${JSON.stringify(unpackedPayload)}, jsonPayload: ${formattedPayload}`);
+            this.emit(V2_EVENTS.PROP_UPDATE, {
+                componentId,
+                source,
+                path: registeredProperty.path,
+                format: registeredProperty.format,
+                data: payload,
+                unpackedValue: unpackedPayload,
+                formattedValue: formattedPayload,
+            });
         } catch (e) {
             const message = `Parsing failed for ${source} property ${propTopic} from ${componentId}`;
             console.error(message);

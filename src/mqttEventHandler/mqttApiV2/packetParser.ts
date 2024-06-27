@@ -857,7 +857,7 @@ export class V2PacketParser {
      * @param {propertyRegistration} propertyRegistration - registration information on property
      * @return {V2JsonPropertyValue} - the formatted json blob with property information
      */
-    jsonFormatPropertyValue ( value: V2UnpackedPropertyValue, propertyRegistration: V2PropertyRegistration): V2JsonPropertyValue | undefined {
+    jsonFormatPropertyValue ( value: V2UnpackedPropertyValue, propertyRegistration: V2PropertyRegistration): V2JsonPropertyValue {
         switch (propertyRegistration.type) {
             case 'gmbnd_primitive':
                 // eslint-disable-next-line no-case-declarations
@@ -879,7 +879,8 @@ export class V2PacketParser {
             default:
                 exhaustiveGuard(propertyRegistration.type);
         }
-        return undefined;
+        // Because the default case above throws an error, we will never get here
+        throw new Error('Unable to JSON format property value');
     }
 
     /**
