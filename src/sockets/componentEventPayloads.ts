@@ -1,4 +1,4 @@
-import { FormattedPropertyValue } from '../types/mqtt-api';
+import { AnySource, FormattedPropertyValue } from '../types/mqtt-api';
 import type { ObjectValues } from '../utils/usefulTS';
 
 export type ExhibitOfflinePayload = {
@@ -41,11 +41,11 @@ export type HardwareProperty = {
     value: FormattedPropertyValue,
     format: string,
     path: string,
-    source: 'system' | 'app',
+    source: AnySource,
     componentId: string,
 }
 
-export type HardwarePropertyUpdatePayload = {
+export type ComponentPropertyUpdatePayload = {
     exhibitId: number,
     componentId: string,
     category: ComponentCategory,
