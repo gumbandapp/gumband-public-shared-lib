@@ -1,4 +1,5 @@
 import type { DataType } from 'python-struct';
+import { ObjectValues } from '../../utils';
 
 export const V2ApiVersions = [2] as const;
 
@@ -50,12 +51,12 @@ export const V2PropertyTypes = [
     'gmbnd_led',
 ] as const;
 
-export const V2Sources = [
-    'system',
-    'app',
-] as const;
+export const V2Sources = {
+    SYSTEM: 'system',
+    APP: 'app',
+} as const;
 
-export type V2Source = (typeof V2Sources)[number];
+export type V2Source = ObjectValues<typeof V2Sources>;
 
 export type V2PropertyType = (typeof V2PropertyTypes)[number];
 
