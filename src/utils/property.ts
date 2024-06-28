@@ -10,6 +10,10 @@ import { exhaustiveGuard } from './usefulTS';
  * @return {Buffer} the buffer packed from provided values
  */
 export const packPropertyValue = (format: string, values: Array<Array<DataType>>): Buffer => {
+    if (format === 's') {
+        // In this case, we assume that a single string is wrapped in a 2D array
+        return Buffer.from(values[0][0].toString());
+    }
     return Buffer.concat(values.map((value: Array<DataType>) => {
         return struct.pack(format, value);
     }));

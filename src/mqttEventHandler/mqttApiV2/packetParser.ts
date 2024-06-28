@@ -912,6 +912,11 @@ export class V2PacketParser {
         let customDataFormat: V2PropertyFormatInfo | undefined = undefined;
         switch (propertyRegistration.type) {
             case 'gmbnd_primitive':
+                if (propertyRegistration.format === 's' && typeof value[0] === 'string') {
+                    // We expect 's' format props to only have a single string in the array
+                    const returnValue = value[0];
+                    return [[returnValue]];
+                }
                 // eslint-disable-next-line no-case-declarations
                 let i = 0;
                 while (i<value.length) {

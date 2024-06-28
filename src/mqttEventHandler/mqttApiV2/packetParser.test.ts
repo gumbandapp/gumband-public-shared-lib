@@ -210,12 +210,12 @@ describe('ValidatePropertyValueBoundaries - LED', () => {
 
     it('Throws an error when a number value is greater than the max', async ()=>{
         expect(() => {
-            testPacketParser.validatePropertyValueBoundaries([11, 13, 122, 20, 126759217, 31], mockPropertyRegistration);
+            testPacketParser.validatePropertyValueBoundaries([126759217, 11, 13, 122, 20, 31], mockPropertyRegistration);
         }).toThrow('Property value falls above expected maximum of 65535');
     });
 
     it('Accepts the number value when all values between min and max', async ()=>{
-        expect(testPacketParser.validatePropertyValueBoundaries([10, 20, 50, 250, 543, 100], mockPropertyRegistration)).toEqual([10, 20, 50, 250, 543, 100]);
+        expect(testPacketParser.validatePropertyValueBoundaries([543, 100, 10, 20, 50, 250], mockPropertyRegistration)).toEqual([543, 100, 10, 20, 50, 250]);
     });
 
     it('Throws an error when a long value is less than the min', async ()=>{
@@ -226,12 +226,12 @@ describe('ValidatePropertyValueBoundaries - LED', () => {
 
     it('Throws an error when a long value is greater than the max', async ()=>{
         expect(() => {
-            testPacketParser.validatePropertyValueBoundaries([Long.fromString('11'), Long.fromString('13'), Long.fromString('133'), Long.fromString('20'), Long.fromString('126759217'), Long.fromString('31')], mockPropertyRegistration);
+            testPacketParser.validatePropertyValueBoundaries([Long.fromString('126759217'), Long.fromString('11'), Long.fromString('13'), Long.fromString('133'), Long.fromString('20'), Long.fromString('31')], mockPropertyRegistration);
         }).toThrow('Property value falls above expected maximum of 65535');
     });
 
     it('Accepts the long value when all values between min and max', async ()=>{
-        expect(testPacketParser.validatePropertyValueBoundaries([Long.fromString('10'), Long.fromString('20'), Long.fromString('50'), Long.fromString('250'), Long.fromString('543'), Long.fromString('100')], mockPropertyRegistration)).toEqual([Long.fromString('10'), Long.fromString('20'), Long.fromString('50'), Long.fromString('250'), Long.fromString('543'), Long.fromString('100')]);
+        expect(testPacketParser.validatePropertyValueBoundaries([Long.fromString('543'), Long.fromString('10'), Long.fromString('20'), Long.fromString('50'), Long.fromString('250'), Long.fromString('100')], mockPropertyRegistration)).toEqual([Long.fromString('543'), Long.fromString('10'), Long.fromString('20'), Long.fromString('50'), Long.fromString('250'), Long.fromString('100')]);
     });
 });
 
@@ -314,7 +314,7 @@ describe('PrettyPrints Different Json Values as requested for led type', () => {
         const white = generateRandomNumber(255);
         const index = generateRandomNumber(65535);
         const brightness = generateRandomNumber(255);
-        expect(testPacketParser.jsonFormatPropertyValue([[red, green, blue, white, index, brightness]], mockPropertyRegistration)).toEqual([{
+        expect(testPacketParser.jsonFormatPropertyValue([[index, brightness, white, red, green, blue]], mockPropertyRegistration)).toEqual([{
             red,
             green,
             blue,
