@@ -173,5 +173,5 @@ export type AnyV2MQTTPayload =
  * @return  {boolean} if the source is valid
  */
 export function isV2Source (source: string): source is V2Source {
-    return V2Sources.includes(source as V2Source);
+    return Object.values(V2Sources).includes(source as V2Source);
 }

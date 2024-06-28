@@ -1,4 +1,4 @@
-import { AnySource, FormattedPropertyValue } from '../types/mqtt-api';
+import { AnyPropertyType, AnySource, FormattedPropertyValue } from '../types/mqtt-api';
 import type { ObjectValues } from '../utils/usefulTS';
 
 export type ExhibitOfflinePayload = {
@@ -38,11 +38,17 @@ export type ComponentDisconnectedPayload = ComponentConnectedPayload;
 
 // V2 Hardware Events
 export type HardwareProperty = {
-    value: FormattedPropertyValue,
-    format: string,
-    path: string,
+    componentId: string, // parent hardware componentId
     source: AnySource,
-    componentId: string,
+    path: string, // Unique within each source
+    index: number, // Unique within each source
+    type: AnyPropertyType,
+    format: string,
+    value: FormattedPropertyValue,
+    arrayLength: number, // length of value
+    settable: boolean,
+    gettable: boolean,
+    uiHidden: boolean,
 }
 
 export type ComponentPropertyUpdatePayload = {
