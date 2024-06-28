@@ -13,7 +13,7 @@ import type {
 import type {
     ComponentConnectedPayload,
     ComponentDisconnectedPayload,
-    ComponentPropertyUpdatePayload,
+    ComponentPropertyReceivedPayload,
     ExhibitOfflinePayload,
     ExhibitOnlinePayload,
     HardwareOfflinePayload,
@@ -44,7 +44,7 @@ export type SocketEventPayloadMap = {
     EXHIBIT_ONLINE: ExhibitOnlinePayload;
     COMPONENT_CONNECTED: ComponentConnectedPayload;
     COMPONENT_DISCONNECTED: ComponentDisconnectedPayload;
-    COMPONENT_PROPERTY_RECEIVED: ComponentPropertyUpdatePayload;
+    COMPONENT_PROPERTY_RECEIVED: ComponentPropertyReceivedPayload;
     // V1 Hardware Events
     HARDWARE_OFFLINE: HardwareOfflinePayload;
     HARDWARE_ONLINE: HardwareOnlinePayload;

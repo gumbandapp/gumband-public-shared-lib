@@ -51,7 +51,7 @@ export type HardwareProperty = {
     uiHidden: boolean,
 }
 
-export type ComponentPropertyUpdatePayload = {
+export type ComponentPropertyReceivedPayload = {
     exhibitId: number,
     componentId: string,
     category: ComponentCategory,
