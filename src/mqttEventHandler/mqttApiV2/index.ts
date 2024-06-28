@@ -94,6 +94,21 @@ export const GMBND_COLOR_FORMAT = [
 
 export const GMBND_LED_FORMAT = [
     {
+        name: 'index',
+        min: 0,
+        max: 65535,
+    },
+    {
+        name: 'brightness',
+        min: 0,
+        max: 255,
+    },
+    {
+        name: 'white',
+        min: 0,
+        max: 255,
+    },
+    {
         name: 'red',
         min: 0,
         max: 255,
@@ -105,21 +120,6 @@ export const GMBND_LED_FORMAT = [
     },
     {
         name: 'blue',
-        min: 0,
-        max: 255,
-    },
-    {
-        name: 'white',
-        min: 0,
-        max: 255,
-    },
-    {
-        name: 'index',
-        min: 0,
-        max: 65535,
-    },
-    {
-        name: 'brightness',
         min: 0,
         max: 255,
     },
