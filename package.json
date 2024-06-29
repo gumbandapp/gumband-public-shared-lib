@@ -1,6 +1,6 @@
 {
   "name": "@deeplocal/gumband-public-shared-lib",
-  "version": "0.0.22-alpha-GUM-1300-property-update-events.1",
+  "version": "0.0.22-alpha-GUM-1300-property-update-events.2",
   "description": "A publicly shared library package for the Gumband Ecosystem",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
