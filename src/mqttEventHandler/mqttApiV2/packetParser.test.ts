@@ -501,7 +501,7 @@ describe('unpackJsonPropertyValue', () => {
 });
 
 describe('packPropertyValue', () => {
-    describe('when packing strings', () => {
+    describe('when format is string', () => {
         it('should return a buffer of the full string given when no length is specified in the format', () => {
             const stubString = 'stub-string';
             expect(testPacketParser.packPropertyValue('s', [[stubString]])).toEqual(Buffer.from(stubString));
@@ -516,6 +516,34 @@ describe('packPropertyValue', () => {
             expect(() => testPacketParser.packPropertyValue('s', [[11]])).toThrow(new TypeError('values[0][0] is not a string'));
             expect(() => testPacketParser.packPropertyValue('s', [[true]])).toThrow(new TypeError('values[0][0] is not a string'));
             expect(() => testPacketParser.packPropertyValue('s', [[Long.fromInt(65555)]])).toThrow(new TypeError('values[0][0] is not a string'));
+        });
+    });
+
+    describe('when format is not string', () => {
+        it('should return concatenate all property values into a single Buffer', () => {
+            let expectedPackedData = struct.pack('B', [1]);
+
+            let actualUnpackedData = testPacketParser.packPropertyValue('B', [[1]]);
+
+            expect(actualUnpackedData.length).toEqual(struct.sizeOf('B'));
+            expect(actualUnpackedData).toEqual(expectedPackedData);
+
+            expectedPackedData = struct.pack('BBBB', [1, 2, 3, 4]);
+
+            actualUnpackedData = testPacketParser.packPropertyValue('B', [[1], [2], [3], [4]]);
+
+            expect(actualUnpackedData.length).toEqual(struct.sizeOf('BBBB'));
+            expect(actualUnpackedData).toEqual(expectedPackedData);
+
+            actualUnpackedData = testPacketParser.packPropertyValue('BB', [[1, 2], [3, 4]]);
+
+            expect(actualUnpackedData.length).toEqual(struct.sizeOf('BBBB'));
+            expect(actualUnpackedData).toEqual(expectedPackedData);
+
+            actualUnpackedData = testPacketParser.packPropertyValue('BBBB', [[1, 2, 3, 4]]);
+
+            expect(actualUnpackedData.length).toEqual(struct.sizeOf('BBBB'));
+            expect(actualUnpackedData).toEqual(expectedPackedData);
         });
     });
 });
