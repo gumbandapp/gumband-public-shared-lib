@@ -1,23 +1,8 @@
 import { MqttClient } from 'mqtt/*';
-import struct, { DataType } from 'python-struct';
 import { ApiVersion } from '../types';
 import { exhaustiveGuard } from './usefulTS';
-/**
- * Packs a property value to be sent to MQTT
- *
- * @param {string} format - string format for the property
- * @param {Array<Array<DataType>>} values - the list of property value
- * @return {Buffer} the buffer packed from provided values
- */
-export const packPropertyValue = (format: string, values: Array<Array<DataType>>): Buffer => {
-    if (format === 's') {
-        // In this case, we assume that a single string is wrapped in a 2D array
-        return Buffer.from(values[0][0].toString());
-    }
-    return Buffer.concat(values.map((value: Array<DataType>) => {
-        return struct.pack(format, value);
-    }));
-};
+
+
 /**
  * Publishes a packed payload to the property topic on mqtt
  *

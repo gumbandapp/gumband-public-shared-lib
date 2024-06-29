@@ -3,7 +3,7 @@
 import { isNativeError } from 'util/types';
 
 import Long from 'long';
-import struct from 'python-struct';
+import struct, { DataType } from 'python-struct';
 import { GMBND_COLOR_FORMAT, GMBND_LED_FORMAT } from '.';
 import { V2ApiVersion, V2ApiVersions, V2ApplicationInfo, V2BasePropertyValue, V2JsonExtendedPropertyValue, V2JsonPropertyValue, V2Platform, V2PropertyFormat, V2PropertyFormatInfo, V2PropertyRegistration, V2PropertyType, V2PropertyTypes, V2SystemInfo, V2SystemType, V2SystemTypes, V2UnpackedPropertyValue } from '../../types';
 import { exhaustiveGuard } from '../../utils/usefulTS';
@@ -17,6 +17,7 @@ Can be read as:
 Note: this does not match empty format strings, which should be considered valid.
 */
 const PROPERTY_FORMAT_REGEX = /^[@=!<>]?([1-9]?[xcbBhHiIlLfdspPqQ?])+$/;
+const PROPERTY_FORMAT_STRING_REGEX = /^[@=!<>]?(s)+$/;
 const MAC_ADDRESS_REGEX = /^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$/;
 const INVALID_PROPERTY_PATH_CHARS = /[^\x20-\x22\x25-\x2A\x2C-\x7E]/; // Negated set of all printable characters except #, $, + and <DEL> (see: https://web.itu.edu.tr/sgunduz/courses/mikroisl/ascii.html)
 
@@ -857,7 +858,7 @@ export class V2PacketParser {
      * @param {propertyRegistration} propertyRegistration - registration information on property
      * @return {V2JsonPropertyValue} - the formatted json blob with property information
      */
-    jsonFormatPropertyValue ( value: V2UnpackedPropertyValue, propertyRegistration: V2PropertyRegistration): V2JsonPropertyValue {
+    jsonFormatPropertyValue (value: V2UnpackedPropertyValue, propertyRegistration: V2PropertyRegistration): V2JsonPropertyValue {
         switch (propertyRegistration.type) {
             case 'gmbnd_primitive':
                 // eslint-disable-next-line no-case-declarations
@@ -912,10 +913,10 @@ export class V2PacketParser {
         let customDataFormat: V2PropertyFormatInfo | undefined = undefined;
         switch (propertyRegistration.type) {
             case 'gmbnd_primitive':
-                if (propertyRegistration.format === 's' && typeof value[0] === 'string') {
+                if (PROPERTY_FORMAT_STRING_REGEX.test(propertyRegistration.format) && typeof value[0] === 'string') {
                     // We expect 's' format props to only have a single string in the array
-                    const returnValue = value[0];
-                    return [[returnValue]];
+                    // Also we ignore propertyRegistration.length at this point
+                    return [[value[0]]];
                 }
                 // eslint-disable-next-line no-case-declarations
                 let i = 0;
@@ -962,5 +963,29 @@ export class V2PacketParser {
         }
 
         return unpackedDataArr;
+    }
+
+    /**
+     * Packs a property value to be sent to MQTT
+     *
+     * @param {string} format - string format for the property
+     * @param {V2UnpackedPropertyValue} values - the list of property value
+     * @return {Buffer} the buffer packed from provided values
+     */
+    public packPropertyValue (format: string, values: V2UnpackedPropertyValue): Buffer {
+        if (PROPERTY_FORMAT_STRING_REGEX.test(format)) {
+            // In this case, we assume that a single string is wrapped in a 2D array
+            const value = values[0][0];
+            const sIndex = format.indexOf('s');
+            if (typeof value !== 'string') {
+                throw new TypeError('values[0][0] is not a string');
+            }
+            const length = value.length;
+            format = format.substring(0, sIndex) + String(length) + format.substring(sIndex);
+            values = [[value]];
+        }
+        return Buffer.concat(values.map((value: Array<DataType>) => {
+            return struct.pack(format, value);
+        }));
     }
 }
