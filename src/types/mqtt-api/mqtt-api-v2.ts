@@ -1,4 +1,5 @@
 import type { DataType } from 'python-struct';
+import { ObjectValues } from '../../utils';
 
 export const V2ApiVersions = [2] as const;
 
@@ -50,12 +51,12 @@ export const V2PropertyTypes = [
     'gmbnd_led',
 ] as const;
 
-export const V2Sources = [
-    'system',
-    'app',
-] as const;
+export const V2Sources = {
+    SYSTEM: 'system',
+    APP: 'app',
+} as const;
 
-export type V2Source = (typeof V2Sources)[number];
+export type V2Source = ObjectValues<typeof V2Sources>;
 
 export type V2PropertyType = (typeof V2PropertyTypes)[number];
 
@@ -172,5 +173,5 @@ export type AnyV2MQTTPayload =
  * @return  {boolean} if the source is valid
  */
 export function isV2Source (source: string): source is V2Source {
-    return V2Sources.includes(source as V2Source);
+    return Object.values(V2Sources).includes(source as V2Source);
 }

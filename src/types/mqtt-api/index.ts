@@ -1,4 +1,5 @@
 export * from './mqtt-api-v2';
+import { ObjectValues } from '../../utils';
 import type {
     AnyV2MQTTPayload,
     V2ApiVersion,
@@ -9,6 +10,7 @@ import type {
     V2SourceRegistrationCommonFields,
     V2SystemInfo,
     V2SystemRegistration,
+    V2JsonPropertyValue,
 } from './mqtt-api-v2';
 import {
     V2ApiSubscribedTopics,
@@ -19,8 +21,8 @@ import {
     V2SystemInfoTopic,
 } from './mqtt-api-v2';
 
-export const AllSources = [...V2Sources] as const;
-export type AnySource = (typeof AllSources)[number];
+export const AllSources = V2Sources;
+export type AnySource = ObjectValues<typeof AllSources>;
 
 /*
     These types are meant to be Agnostic to the API Version. When we introduce a V3 api, all of these will basically become:
@@ -49,6 +51,8 @@ export type AnyMQTTPayload = AnyV2MQTTPayload;
 
 export const AllPropertyTypes = [...V2PropertyTypes] as const;
 export type AnyPropertyType = (typeof AllPropertyTypes)[number];
+
+export type FormattedPropertyValue = V2JsonPropertyValue;
 
 /**
  * Type Guard for the ApiVersion
