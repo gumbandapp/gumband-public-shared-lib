@@ -225,7 +225,11 @@ export class MqttApiV2 extends EventEmitter { // eslint-disable-line @typescript
         // Handle Last Will and Testament
         if (payload.length === 0) {
             this.emit(V2_EVENTS.ONLINE, { componentId, online: false });
-            await lockRegistrationCacheAndPerformAction(this.cache, new Set(['system', 'app']), componentId, async () => this.cache.clearAllCacheForComponentId(componentId));
+            try {
+                await lockRegistrationCacheAndPerformAction(this.cache, new Set(['system', 'app']), componentId, async () => this.cache.clearAllCacheForComponentId(componentId));
+            } catch (e) {
+                console.error(e);
+            }
             return;
         }
 
@@ -253,11 +257,7 @@ export class MqttApiV2 extends EventEmitter { // eslint-disable-line @typescript
                 } else {
                     console.error(e);
                 }
-
-                throw new Error(message);
             }
-
-            throw new Error(message);
         }
 
         try {
@@ -274,7 +274,6 @@ export class MqttApiV2 extends EventEmitter { // eslint-disable-line @typescript
                 console.error(e);
             }
 
-            throw new Error(message);
             // TODO [GUM-1297]: determine error handling for this:
             //   - Wait a certain amount of time and try again?
             //   - Re-init redis connection?
@@ -293,15 +292,46 @@ export class MqttApiV2 extends EventEmitter { // eslint-disable-line @typescript
      * @return {void}
      */
     async handleAppInfo (componentId: string, payload: Buffer): Promise<void> {
-        await lockRegistrationCacheAndPerformAction(this.cache, new Set(['app']), componentId, async (): Promise<void> => {
-            const applicationRegistrationPreviouslyCompleted = await this.cache.isRegistered(componentId, 'app');
+        try {
+            await lockRegistrationCacheAndPerformAction(this.cache, new Set(['app']), componentId, async (): Promise<void> => {
+                const applicationRegistrationPreviouslyCompleted = await this.cache.isRegistered(componentId, 'app');
 
-            if (applicationRegistrationPreviouslyCompleted) {
-                console.info(`Stray app/info message received for componentId: ${componentId}. Clearing cached application registration.`);
+                if (applicationRegistrationPreviouslyCompleted) {
+                    console.info(`Stray app/info message received for componentId: ${componentId}. Clearing cached application registration.`);
+                    try {
+                        await this.cache.clearCachedValues(componentId, 'app');
+                    } catch (e) {
+                        const message = `Failed to clear application registration from cache for componentId: ${componentId}`;
+                        console.error(message);
+                        if (isNativeError(e)) {
+                            console.error(e.message);
+                        } else {
+                            console.error(e);
+                        }
+
+                        throw new Error(message);
+                    }
+                    this.emitRegistrationEvent(componentId, 'app', false);
+                }
+
+                let appInfo;
                 try {
-                    await this.cache.clearCachedValues(componentId, 'app');
+                    appInfo = await this.packetParser.parseApplicationInfo(payload);
+                } catch (reason) {
+                    let message = `Invalid app/info payload for componentId: ${componentId}`;
+                    console.debug(message);
+                    if (isNativeError(reason)) {
+                        console.debug('Reason:', reason.message);
+                        message += `. Reason: ${reason.message}`;
+                    }
+
+                    throw new Error(message);
+                }
+
+                try {
+                    await this.cache.cacheApplicationInfo(componentId, appInfo);
                 } catch (e) {
-                    const message = `Failed to clear application registration from cache for componentId: ${componentId}`;
+                    const message = `Failed to cache Application Info for componentId: ${componentId}`;
                     console.error(message);
                     if (isNativeError(e)) {
                         console.error(e.message);
@@ -311,40 +341,13 @@ export class MqttApiV2 extends EventEmitter { // eslint-disable-line @typescript
 
                     throw new Error(message);
                 }
-                this.emitRegistrationEvent(componentId, 'app', false);
-            }
-
-            let appInfo;
-            try {
-                appInfo = await this.packetParser.parseApplicationInfo(payload);
-            } catch (reason) {
-                let message = `Invalid app/info payload for componentId: ${componentId}`;
-                console.debug(message);
-                if (isNativeError(reason)) {
-                    console.debug('Reason:', reason.message);
-                    message += `. Reason: ${reason.message}`;
-                }
-
-                throw new Error(message);
-            }
-
-            try {
-                await this.cache.cacheApplicationInfo(componentId, appInfo);
-            } catch (e) {
-                const message = `Failed to cache Application Info for componentId: ${componentId}`;
-                console.error(message);
-                if (isNativeError(e)) {
-                    console.error(e.message);
-                } else {
-                    console.error(e);
-                }
-
-                throw new Error(message);
-            }
 
 
-            this.setRegistrationTimeoutForComponentIdAndSource(componentId, 'app');
-        });
+                this.setRegistrationTimeoutForComponentIdAndSource(componentId, 'app');
+            });
+        } catch (e) {
+            console.error(e);
+        }
     }
 
     /**
@@ -356,15 +359,47 @@ export class MqttApiV2 extends EventEmitter { // eslint-disable-line @typescript
      * @return {void}
      */
     async handlePropertyRegistration (componentId: string, source: V2Source, payload: Buffer): Promise<void> {
-        return await lockRegistrationCacheAndPerformAction(this.cache, new Set([source]), componentId, async (): Promise<void> => {
-            const registrationPreviouslyCompleted = await this.cache.isRegistered(componentId, source);
+        try {
+            await lockRegistrationCacheAndPerformAction(this.cache, new Set([source]), componentId, async (): Promise<void> => {
+                const registrationPreviouslyCompleted = await this.cache.isRegistered(componentId, source);
 
-            if (registrationPreviouslyCompleted) {
-                console.info(`Stray ${source} prop message received for componentId: ${componentId}. Clearing cached registration.`);
+                if (registrationPreviouslyCompleted) {
+                    console.info(`Stray ${source} prop message received for componentId: ${componentId}. Clearing cached registration.`);
+                    try {
+                        await Promise.all([this.cache.clearProperties(componentId, source), this.cache.setRegistered(componentId, source, false)]);
+                    } catch (e) {
+                        const message = `Failed to clear application registration from cache for componentId: ${componentId}`;
+                        console.error(message);
+                        if (isNativeError(e)) {
+                            console.error(e.message);
+                        } else {
+                            console.error(e);
+                        }
+
+                        throw new Error(message);
+                    }
+                    this.emitRegistrationEvent(componentId, source, false);
+                }
+
+                let prop: V2PropertyRegistration;
                 try {
-                    await Promise.all([this.cache.clearProperties(componentId, source), this.cache.setRegistered(componentId, source, false)]);
+                    prop = await this.packetParser.parseProperty(payload);
+                } catch (reason) {
+                    let message = `Failed to unpack ${source} prop payload for componentId: ${componentId}`;
+                    console.debug(message);
+                    if (isNativeError(reason)) {
+                        console.debug('Reason:', reason.message);
+                        message += `. Reason: ${reason.message}`;
+                    }
+
+                    throw new Error(message);
+                }
+
+                let registeredProps: Array<PropertyRegistration>;
+                try {
+                    registeredProps = await this.cache.getAllProperties(componentId, source);
                 } catch (e) {
-                    const message = `Failed to clear application registration from cache for componentId: ${componentId}`;
+                    const message = `Failed to get ${source} properties from cache for componentId: ${componentId}`;
                     console.error(message);
                     if (isNativeError(e)) {
                         console.error(e.message);
@@ -374,76 +409,48 @@ export class MqttApiV2 extends EventEmitter { // eslint-disable-line @typescript
 
                     throw new Error(message);
                 }
-                this.emitRegistrationEvent(componentId, source, false);
-            }
 
-            let prop: V2PropertyRegistration;
-            try {
-                prop = await this.packetParser.parseProperty(payload);
-            } catch (reason) {
-                let message = `Failed to unpack ${source} prop payload for componentId: ${componentId}`;
-                console.debug(message);
-                if (isNativeError(reason)) {
-                    console.debug('Reason:', reason.message);
-                    message += `. Reason: ${reason.message}`;
-                }
+                try {
+                    registeredProps.forEach((cachedProp) => {
+                        // Important note in this logic: if the combination of the topic AND the index are unique among the previously registered props OR an exact match with one of previously registered props, there is no error
+                        if (cachedProp.index === prop.index && cachedProp.path !== prop.path) {
+                            throw new Error('property index is not unique');
+                        }
 
-                throw new Error(message);
-            }
-
-            let registeredProps: Array<PropertyRegistration>;
-            try {
-                registeredProps = await this.cache.getAllProperties(componentId, source);
-            } catch (e) {
-                const message = `Failed to get ${source} properties from cache for componentId: ${componentId}`;
-                console.error(message);
-                if (isNativeError(e)) {
-                    console.error(e.message);
-                } else {
-                    console.error(e);
-                }
-
-                throw new Error(message);
-            }
-
-            try {
-                registeredProps.forEach((cachedProp) => {
-                    // Important note in this logic: if the combination of the topic AND the index are unique among the previously registered props OR an exact match with one of previously registered props, there is no error
-                    if (cachedProp.index === prop.index && cachedProp.path !== prop.path) {
-                        throw new Error('property index is not unique');
+                        if (cachedProp.path === prop.path && cachedProp.index !== prop.index) {
+                            throw new Error('property topic is not unique');
+                        }
+                    });
+                } catch (reason) {
+                    let message = 'New property is not compatible with previously registered properties';
+                    console.debug(message);
+                    if (isNativeError(reason)) {
+                        console.debug('Reason:', reason.message);
+                        message += `. Reason: ${reason.message}`;
                     }
 
-                    if (cachedProp.path === prop.path && cachedProp.index !== prop.index) {
-                        throw new Error('property topic is not unique');
+                    return;
+                }
+
+                try {
+                    await this.cache.cacheProperty(componentId, source, prop.path, prop);
+                } catch (e) {
+                    const message = `Failed to cache ${source} Property for componentId: ${componentId}`;
+                    console.error(message);
+                    if (isNativeError(e)) {
+                        console.error(e.message);
+                    } else {
+                        console.error(e);
                     }
-                });
-            } catch (reason) {
-                let message = 'New property is not compatible with previously registered properties';
-                console.debug(message);
-                if (isNativeError(reason)) {
-                    console.debug('Reason:', reason.message);
-                    message += `. Reason: ${reason.message}`;
+
+                    return;
                 }
 
-                throw new Error(message);
-            }
-
-            try {
-                await this.cache.cacheProperty(componentId, source, prop.path, prop);
-            } catch (e) {
-                const message = `Failed to cache ${source} Property for componentId: ${componentId}`;
-                console.error(message);
-                if (isNativeError(e)) {
-                    console.error(e.message);
-                } else {
-                    console.error(e);
-                }
-
-                throw new Error(message);
-            }
-
-            this.setRegistrationTimeoutForComponentIdAndSource(componentId, source);
-        });
+                this.setRegistrationTimeoutForComponentIdAndSource(componentId, source);
+            });
+        } catch (e) {
+            console.error(e);
+        }
     }
 
     /**
@@ -489,11 +496,12 @@ export class MqttApiV2 extends EventEmitter { // eslint-disable-line @typescript
             } else {
                 console.debug(e);
             }
-            throw new Error(message);
+            return;
         }
 
         if (registeredProperty === undefined) {
-            throw (new Error(`Invalid ${source} property registration for, "${propTopic}" in the cache`));
+            console.error(`Invalid ${source} property registration for, "${propTopic}" in the cache`);
+            return;
         }
 
         try {
@@ -513,7 +521,6 @@ export class MqttApiV2 extends EventEmitter { // eslint-disable-line @typescript
         } catch (e) {
             const message = `Parsing failed for ${source} property ${propTopic} from ${componentId}`;
             console.error(message);
-            throw new Error(message);
         }
     }
 
@@ -562,74 +569,36 @@ export class MqttApiV2 extends EventEmitter { // eslint-disable-line @typescript
      * @fires MqttApiV2#ApplicationRegistration
      */
     async checkRegistrationForComponentIdAndSource (componentId: string, source: AnySource): Promise<void> {
-        await lockRegistrationCacheAndPerformAction(this.cache, new Set([source]), componentId, async () => {
-            try {
-                if (await this.cache.isRegistered(componentId, source)) {
-                    // Because this method could run in one instance of the listener after another instance of the listener has already determined that the application is register, this early return saves processing at scale
-                    console.log(`determined ${source} was previously registered -> no-op`);
-                    return;
-                }
-            } catch (e) {
-                const message = `Failed to get ${source} iRegistered from the cache`;
-                console.error(message);
-                console.error(e);
-                throw new Error(message);
-            }
-
-            let sourceInfo: ApplicationInfo | SystemInfo | undefined;
-            try {
-                switch (source) {
-                    case 'system':
-                        sourceInfo = await this.cache.getSystemInfo(componentId);
-                        break;
-                    case 'app':
-                        sourceInfo = await this.cache.getApplicationInfo(componentId);
-                        break;
-                    default:
-                        sourceInfo = exhaustiveGuard(source);
-                        break;
-                }
-            } catch (e) {
-                const message = `Unable to get ${source} from the cache`;
-                console.error(message);
-                if (isNativeError(e)) {
-                    console.debug(e.message);
-                } else {
-                    console.debug(e);
-                }
-                throw new Error(message);
-            }
-
-            if (sourceInfo?.num_props === undefined) {
-                throw new Error(`${source} info is invalid`);
-            }
-
-            const expectNumberOfProps = sourceInfo.num_props;
-
-            let registeredProperties;
-            try {
-                registeredProperties = await this.cache.getAllProperties(componentId, source);
-            } catch (e) {
-                const message = `Failed to get ${source} properties from the cache`;
-                console.error(message);
-                if (isNativeError(e)) {
-                    console.debug(e.message);
-                } else {
-                    console.debug(e);
-                }
-                throw new Error(message);
-            }
-
-            if (
-                (registeredProperties && expectNumberOfProps === registeredProperties.length) ||
-                (!registeredProperties && expectNumberOfProps === 0)
-            ) {
-                // The application registration is complete!
-                console.log(`${source} Registered!`);
+        try {
+            await lockRegistrationCacheAndPerformAction(this.cache, new Set([source]), componentId, async () => {
                 try {
-                    await this.cache.setRegistered(componentId, source, true);
+                    if (await this.cache.isRegistered(componentId, source)) {
+                        // Because this method could run in one instance of the listener after another instance of the listener has already determined that the application is register, this early return saves processing at scale
+                        console.log(`determined ${source} was previously registered -> no-op`);
+                        return;
+                    }
                 } catch (e) {
-                    const message = `[Critical] Failed to set ${source} isRegistered to true in the cache`;
+                    const message = `Failed to get ${source} iRegistered from the cache`;
+                    console.error(message);
+                    console.error(e);
+                    throw new Error(message);
+                }
+
+                let sourceInfo: ApplicationInfo | SystemInfo | undefined;
+                try {
+                    switch (source) {
+                        case 'system':
+                            sourceInfo = await this.cache.getSystemInfo(componentId);
+                            break;
+                        case 'app':
+                            sourceInfo = await this.cache.getApplicationInfo(componentId);
+                            break;
+                        default:
+                            sourceInfo = exhaustiveGuard(source);
+                            break;
+                    }
+                } catch (e) {
+                    const message = `Unable to get ${source} from the cache`;
                     console.error(message);
                     if (isNativeError(e)) {
                         console.debug(e.message);
@@ -639,12 +608,54 @@ export class MqttApiV2 extends EventEmitter { // eslint-disable-line @typescript
                     throw new Error(message);
                 }
 
-                this.emitRegistrationEvent(componentId, source, true);
-            } else {
-                // Only emit the not registered event if the timeout occurs
-                this.emitRegistrationEvent(componentId, source, false);
-            }
-        });
+                if (sourceInfo?.num_props === undefined) {
+                    throw new Error(`${source} info is invalid`);
+                }
+
+                const expectNumberOfProps = sourceInfo.num_props;
+
+                let registeredProperties;
+                try {
+                    registeredProperties = await this.cache.getAllProperties(componentId, source);
+                } catch (e) {
+                    const message = `Failed to get ${source} properties from the cache`;
+                    console.error(message);
+                    if (isNativeError(e)) {
+                        console.debug(e.message);
+                    } else {
+                        console.debug(e);
+                    }
+                    throw new Error(message);
+                }
+
+                if (
+                    (registeredProperties && expectNumberOfProps === registeredProperties.length) ||
+                    (!registeredProperties && expectNumberOfProps === 0)
+                ) {
+                    // The application registration is complete!
+                    console.log(`${source} Registered!`);
+                    try {
+                        await this.cache.setRegistered(componentId, source, true);
+                    } catch (e) {
+                        const message = `[Critical] Failed to set ${source} isRegistered to true in the cache`;
+                        console.error(message);
+                        if (isNativeError(e)) {
+                            console.debug(e.message);
+                        } else {
+                            console.debug(e);
+                        }
+                        throw new Error(message);
+                    }
+
+                    this.emitRegistrationEvent(componentId, source, true);
+                } else {
+                    // Only emit the not registered event if the timeout occurs
+                    this.emitRegistrationEvent(componentId, source, false);
+                }
+            });
+        } catch (e) {
+            console.error(e);
+        }
     }
 
     /**

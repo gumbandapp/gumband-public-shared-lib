@@ -66,7 +66,7 @@ export class MQTTEventHandler extends EventEmitter {
             console.error(message);
             console.error('Payload:', payload);
             console.error('Error:', e);
-            throw new Error(message);
+            return;
         }
 
         // If the API version isn't available, we need to grab it from the initial registration
@@ -79,7 +79,7 @@ export class MQTTEventHandler extends EventEmitter {
                 await this.mqttV2Api.onMessage(componentId, topic as V2ApiTopic, payload);
                 return;
             default:
-                throw new Error(`Unrecognized MQTT API Version (${apiVersion}) for componentId: ${componentId}`);
+                console.warn(`Unrecognized MQTT API Version (${apiVersion}) for componentId: ${componentId}`);
         }
     }
 

@@ -748,36 +748,40 @@ export class V2PacketParser {
      * @return {V2BasePropertyValue} value - the value that falls between ranges
      */
     validatePropertyValueBoundaries (values: V2BasePropertyValue, propertyRegistration: V2PropertyRegistration ): V2BasePropertyValue {
-        switch (propertyRegistration.type) {
-            case 'gmbnd_primitive':
-                values.forEach((value) => {
-                    if (typeof value === 'number') {
-                        if ( propertyRegistration.min !== undefined && value<propertyRegistration.min ) {
-                            throw new Error(`Property value falls below expected minimum of ${propertyRegistration.min}`);
+        try {
+            switch (propertyRegistration.type) {
+                case 'gmbnd_primitive':
+                    values.forEach((value) => {
+                        if (typeof value === 'number') {
+                            if ( propertyRegistration.min !== undefined && value<propertyRegistration.min ) {
+                                throw new Error(`Property value falls below expected minimum of ${propertyRegistration.min}`);
+                            }
+                            if ( propertyRegistration.max !== undefined && value>propertyRegistration.max ) {
+                                throw new Error(`Property value falls above expected maximum of ${propertyRegistration.max}`);
+                            }
+                        } else if (Long.isLong(value)) {
+                            if ( propertyRegistration.min !== undefined && value.compare(propertyRegistration.min) === -1) {
+                                throw new Error(`Property value falls below expected minimum of ${propertyRegistration.min}`);
+                            }
+                            if ( propertyRegistration.max !== undefined && value.compare(propertyRegistration.max) === 1 ) {
+                                throw new Error(`Property value falls above expected maximum of ${propertyRegistration.max}`);
+                            }
                         }
-                        if ( propertyRegistration.max !== undefined && value>propertyRegistration.max ) {
-                            throw new Error(`Property value falls above expected maximum of ${propertyRegistration.max}`);
-                        }
-                    } else if (Long.isLong(value)) {
-                        if ( propertyRegistration.min !== undefined && value.compare(propertyRegistration.min) === -1) {
-                            throw new Error(`Property value falls below expected minimum of ${propertyRegistration.min}`);
-                        }
-                        if ( propertyRegistration.max !== undefined && value.compare(propertyRegistration.max) === 1 ) {
-                            throw new Error(`Property value falls above expected maximum of ${propertyRegistration.max}`);
-                        }
-                    }
-                });
-                break;
-            case 'gmbnd_color':
-                this.validateExtendedPropertyValueBoundaries(values, GMBND_COLOR_FORMAT);
-                break;
-            case 'gmbnd_led':
-                this.validateExtendedPropertyValueBoundaries(values, GMBND_LED_FORMAT);
-                break;
-            default:
-                exhaustiveGuard(propertyRegistration.type);
+                    });
+                    break;
+                case 'gmbnd_color':
+                    this.validateExtendedPropertyValueBoundaries(values, GMBND_COLOR_FORMAT);
+                    break;
+                case 'gmbnd_led':
+                    this.validateExtendedPropertyValueBoundaries(values, GMBND_LED_FORMAT);
+                    break;
+                default:
+                    exhaustiveGuard(propertyRegistration.type);
+            }
+            return values;
+        } catch (e: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
+            throw new Error(e);
         }
-        return values;
     }
 
     /**
@@ -859,29 +863,33 @@ export class V2PacketParser {
      * @return {V2JsonPropertyValue} - the formatted json blob with property information
      */
     jsonFormatPropertyValue (value: V2UnpackedPropertyValue, propertyRegistration: V2PropertyRegistration): V2JsonPropertyValue {
-        switch (propertyRegistration.type) {
-            case 'gmbnd_primitive':
-                // eslint-disable-next-line no-case-declarations
-                const primativeArray: V2BasePropertyValue = [];
-                value.forEach((val) => {
-                    val.forEach((v)=> {
-                        primativeArray.push(v);
+        try {
+            switch (propertyRegistration.type) {
+                case 'gmbnd_primitive':
+                    // eslint-disable-next-line no-case-declarations
+                    const primativeArray: V2BasePropertyValue = [];
+                    value.forEach((val) => {
+                        val.forEach((v)=> {
+                            primativeArray.push(v);
+                        });
                     });
-                });
-                return primativeArray;
-            case 'gmbnd_color':
-                return value.map((val) => {
-                    return this.formatExtendedPropertyValue(val, GMBND_COLOR_FORMAT);
-                });
-            case 'gmbnd_led':
-                return value.map((val) => {
-                    return this.formatExtendedPropertyValue(val, GMBND_LED_FORMAT);
-                });
-            default:
-                exhaustiveGuard(propertyRegistration.type);
+                    return primativeArray;
+                case 'gmbnd_color':
+                    return value.map((val) => {
+                        return this.formatExtendedPropertyValue(val, GMBND_COLOR_FORMAT);
+                    });
+                case 'gmbnd_led':
+                    return value.map((val) => {
+                        return this.formatExtendedPropertyValue(val, GMBND_LED_FORMAT);
+                    });
+                default:
+                    exhaustiveGuard(propertyRegistration.type);
+            }
+            // Because the default case above throws an error, we will never get here
+            throw new Error('Unable to JSON format property value');
+        } catch (e: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
+            throw new Error(e);
         }
-        // Because the default case above throws an error, we will never get here
-        throw new Error('Unable to JSON format property value');
     }
 
     /**
