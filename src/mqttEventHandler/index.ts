@@ -1,6 +1,5 @@
 export * from './common';
-export * from './mqttApiV2/index';
-export * from './mqttApiV2/packetParser';
+export * from './mqttApiV2';
 
 import EventEmitter from 'events';
 import mqtt from 'mqtt';

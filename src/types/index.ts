@@ -1,3 +1,3 @@
 export * from './api';
-export * from './mqtt-api/index';
+export * from './mqtt-api';
 
