@@ -14,7 +14,8 @@
     "coverage": "jest --coverage",
     "depcheck": "depcheck",
     "lint": "eslint .",
-    "test": "jest"
+    "test": "jest",
+    "prepare": "node .husky/install.mjs"
   },
   "author": "",
   "license": "ISC",
@@ -37,6 +38,7 @@
     "eslint": "^8.56.0",
     "eslint-config-google": "^0.14.0",
     "eslint-plugin-jsdoc": "^48.0.3",
+    "husky": "^9.0.11",
     "jest": "^29.7.0",
     "ts-jest": "^29.1.2",
     "typescript": "^5.3.3"
