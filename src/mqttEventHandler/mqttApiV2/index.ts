@@ -170,7 +170,6 @@ export class MqttApiV2 extends EventEmitter { // eslint-disable-line @typescript
 
         switch (topic) {
             case 'system/info':
-                console.log('blerg test');
                 await this.handleSystemInfo(componentId, payload);
                 break;
             case 'app/info':
@@ -194,7 +193,6 @@ export class MqttApiV2 extends EventEmitter { // eslint-disable-line @typescript
                 // Format:
                 // <source>/prop/<group>/<group>/.../<property>
                 const splitTopic = topic.split('/');
-                console.log('blerger');
                 if (splitTopic[1] === 'prop' && splitTopic[2] === 'pub') {
                     const source = splitTopic[0];
                     const propPath = splitTopic.splice(3);
