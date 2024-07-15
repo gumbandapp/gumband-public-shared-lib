@@ -170,19 +170,20 @@ export class MqttApiV2 extends EventEmitter { // eslint-disable-line @typescript
 
         switch (topic) {
             case 'system/info':
+                console.log('blerg test');
                 await this.handleSystemInfo(componentId, payload);
                 break;
             case 'app/info':
                 await this.handleAppInfo(componentId, payload);
                 break;
-            case 'app/prop':
+            case 'app/register/prop':
                 await this.handlePropertyRegistration(
                     componentId,
                     'app',
                     payload,
                 );
                 break;
-            case 'system/prop':
+            case 'system/register/prop':
                 await this.handlePropertyRegistration(
                     componentId,
                     'system',
@@ -193,9 +194,10 @@ export class MqttApiV2 extends EventEmitter { // eslint-disable-line @typescript
                 // Format:
                 // <source>/prop/<group>/<group>/.../<property>
                 const splitTopic = topic.split('/');
-                if (splitTopic[1] == 'prop') {
+                console.log('blerger');
+                if (splitTopic[1] === 'prop' && splitTopic[2] === 'pub') {
                     const source = splitTopic[0];
-                    const propPath = splitTopic.splice(2);
+                    const propPath = splitTopic.splice(3);
 
                     if (!isV2Source(source)) {
                         throw new Error(`${source} is not a valid V2 API source`);
