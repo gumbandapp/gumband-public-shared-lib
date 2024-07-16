@@ -144,28 +144,16 @@ export const V2ApiSubscribedTopics = V2ApiTopics.map((topic) => {
     return `+/${topic}`;
 });
 
-export function V2PropGetEndpoint(componentId: string, propertyPath: string, source: V2Source): string {
-    return `${componentId}/${source}/prop/get/${propertyPath}`;
+export function V2PropGetEndpoint (componentId: string, propertyPath: string, source: V2Source): string {
+    return `${componentId}/${source}/prop/get/:/${propertyPath}`;
 }
 
-export function V2PropSetEndpoint(componentId: string, propertyPath: string, source: V2Source): string {
-    return `${componentId}/${source}/prop/set/${propertyPath}`;
+export function V2PropSetEndpoint (componentId: string, propertyPath: string, source: V2Source): string {
+    return `${componentId}/${source}/prop/set/:/${propertyPath}`;
 }
 
-export function V2PropPubEndpoint(componentId: string, propertyPath: string, source: V2Source): string {
-    return `${componentId}/${source}/prop/pub/${propertyPath}`;
-}
-
-export function V2PropGetIndexedEndpoint(componentId: string, propertyPath: string, source: V2Source, indexExpr: string): string {
-    return `${componentId}/${source}/prop/get/${indexExpr}/${propertyPath}`;
-}
-
-export function V2PropSetIndexedEndpoint(componentId: string, propertyPath: string, source: V2Source, indexExpr: string): string {
-    return `${componentId}/${source}/prop/setn/${indexExpr}/${propertyPath}`;
-}
-
-export function V2PropPubIndexedEndpoint(componentId: string, propertyPath: string, source: V2Source, indexExpr: string): string {
-    return `${componentId}/${source}/prop/pubn/${indexExpr}/${propertyPath}`;
+export function V2PropPubEndpoint (componentId: string, propertyPath: string, source: V2Source): string {
+    return `${componentId}/${source}/prop/pub/:/${propertyPath}`;
 }
 
 export type V2ApiTopic = (typeof V2ApiTopics)[number];
