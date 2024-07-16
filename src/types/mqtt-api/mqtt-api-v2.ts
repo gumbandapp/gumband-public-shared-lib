@@ -144,15 +144,36 @@ export const V2ApiSubscribedTopics = V2ApiTopics.map((topic) => {
     return `+/${topic}`;
 });
 
-export function V2PropGetEndpoint (componentId: string, propertyPath: string, source: V2Source): string {
+/**
+ *
+ * @param {string} componentId
+ * @param {string} propertyPath
+ * @param {V2Source} source
+ * @return {string}
+ */
+export function v2PropGetEndpoint (componentId: string, propertyPath: string, source: V2Source): string {
     return `${componentId}/${source}/prop/get/:/${propertyPath}`;
 }
 
-export function V2PropSetEndpoint (componentId: string, propertyPath: string, source: V2Source): string {
+/**
+ *
+ * @param {string} componentId
+ * @param {string} propertyPath
+ * @param {V2Source} source
+ * @return {string}
+ */
+export function v2PropSetEndpoint (componentId: string, propertyPath: string, source: V2Source): string {
     return `${componentId}/${source}/prop/set/:/${propertyPath}`;
 }
 
-export function V2PropPubEndpoint (componentId: string, propertyPath: string, source: V2Source): string {
+/**
+ *
+ * @param {string} componentId
+ * @param {string} propertyPath
+ * @param {V2Source} source
+ * @return {string}
+ */
+export function v2PropPubEndpoint (componentId: string, propertyPath: string, source: V2Source): string {
     return `${componentId}/${source}/prop/pub/:/${propertyPath}`;
 }
 
