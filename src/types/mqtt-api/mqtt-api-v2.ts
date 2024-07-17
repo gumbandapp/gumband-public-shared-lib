@@ -145,33 +145,36 @@ export const V2ApiSubscribedTopics = V2ApiTopics.map((topic) => {
 });
 
 /**
+ * Build out the V2 API prop get endpoint given the provided values
  *
- * @param {string} componentId
- * @param {string} propertyPath
- * @param {V2Source} source
- * @return {string}
+ * @param {string} componentId - ComponentId to include in the endpoint
+ * @param {string} propertyPath - Full property path including groups
+ * @param {V2Source} source - source ('system' | 'app')
+ * @return {string} The full endpoint containing the provided values
  */
 export function v2PropGetEndpoint (componentId: string, propertyPath: string, source: V2Source): string {
     return `${componentId}/${source}/prop/get/:/${propertyPath}`;
 }
 
 /**
+ * Build out the V2 API prop get endpoint given the provided values
  *
- * @param {string} componentId
- * @param {string} propertyPath
- * @param {V2Source} source
- * @return {string}
+ * @param {string} componentId - ComponentId to include in the endpoint
+ * @param {string} propertyPath - Full property path including groups
+ * @param {V2Source} source - source ('system' | 'app')
+ * @return {string} The full endpoint containing the provided values
  */
 export function v2PropSetEndpoint (componentId: string, propertyPath: string, source: V2Source): string {
     return `${componentId}/${source}/prop/set/:/${propertyPath}`;
 }
 
 /**
+ * Build out the V2 API prop get endpoint given the provided values
  *
- * @param {string} componentId
- * @param {string} propertyPath
- * @param {V2Source} source
- * @return {string}
+ * @param {string} componentId - ComponentId to include in the endpoint
+ * @param {string} propertyPath - Full property path including groups
+ * @param {V2Source} source - source ('system' | 'app')
+ * @return {string} The full endpoint containing the provided values
  */
 export function v2PropPubEndpoint (componentId: string, propertyPath: string, source: V2Source): string {
     return `${componentId}/${source}/prop/pub/:/${propertyPath}`;
