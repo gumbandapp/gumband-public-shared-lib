@@ -180,6 +180,17 @@ export function v2PropPubEndpoint (componentId: string, propertyPath: string, so
     return `${componentId}/${source}/prop/pub/:/${propertyPath}`;
 }
 
+/**
+ * Build out the V2 API registration get endpoint
+ *
+ * @param {string} componentId - ComponentId to include in the endpoint
+ * @param {V2Source} source - source ('system' | 'app')
+ * @return {string} The full endpoint containing the provided values
+ */
+export function v2GetRegistrationEndpoint (componentId: string, source: V2Source): string {
+    return `${componentId}/${source}/get`;
+}
+
 export type V2ApiTopic = (typeof V2ApiTopics)[number];
 
 export type V2BasePropertyValue = Array<DataType>;
