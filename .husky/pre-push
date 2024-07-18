@@ -10,17 +10,6 @@ else
 fi
 
 # Run the tests, if it fails, log some output but don't fail the commit
-npm run lint || true
-
-#  Mutiline echo
-echo ""
-echo "===== A CODE COMMIT LIMERICK ====="
-echo "In days of old, a stray commit,"
-echo "Could sneak through without lints, bit by bit."
-echo "But the future's more demanding,"
-echo "Errors will cause reprimanding,"
-echo "so run your test, and lint before commit."
-echo "===== Chat GPT (and Kyle) =====" 
-echo ""
+npm run lint
 
 echo "Husky Pre-Push hooks completed"
