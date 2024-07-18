@@ -829,6 +829,11 @@ export class V2PacketParser {
             let formatString = propertyRegistration.format;
             // The string packing is a bit weird, it can't be iteratively unpacked like the other types since "s", means a string of size 1
             if (propertyRegistration.type == 'gmbnd_primitive' && propertyRegistration.format.includes('s')) {
+                // This doesn't handle the empty string case very well, so we'll just special case it
+                if (payload.length === 0) {
+                    return [['']];
+                }
+
                 const stringBufferLen = Math.min(propertyRegistration.length, payload.length);
                 formatString = String(stringBufferLen) + propertyRegistration.format;
             }
