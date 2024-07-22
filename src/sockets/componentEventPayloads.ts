@@ -25,7 +25,10 @@ export type ComponentCategory = ObjectValues<typeof COMPONENT_CATEGORY>;
  * @return {boolean} - true if typeof componentCategory is ComponentCategory
  */
 export function isComponentCategory (componentCategory: unknown): componentCategory is ComponentCategory {
-    return Object.values(COMPONENT_CATEGORY).includes(componentCategory as ComponentCategory);
+    return (
+        typeof componentCategory === 'string' &&
+        Object.values(COMPONENT_CATEGORY).includes(componentCategory as ComponentCategory)
+    );
 }
 
 export const COMPONENT_TYPE = {
