@@ -15,6 +15,7 @@ import {
     V2UnpackedPropertyValue,
     isV2Source,
     V2JsonPropertyValue,
+    V2Log,
 } from '../../types';
 import { exhaustiveGuard } from '../../utils/usefulTS';
 import { lockRegistrationCacheAndPerformAction } from '../common';
@@ -26,6 +27,7 @@ export const V2_EVENTS = {
     ONLINE: 'online',
     REGISTERED: 'registered',
     PROP_UPDATE: 'propertyUpdate',
+    LOG_RECEIVED: 'logReceived',
 } as const;
 
 export type V2HardwareOnlinePayload = {
@@ -52,6 +54,12 @@ export type V2PropertyUpdatePayload = {
     data: Buffer;
 }
 
+export type V2LogPayload = {
+    componentId: string;
+    source: V2Source;
+    log: V2Log;
+}
+
 export type V2UnparsedEventPayload = {
     componentId: string;
     topic: V2ApiTopic;
@@ -64,6 +72,7 @@ export type V2ApiEventMap = {
     [V2_EVENTS.ONLINE]: V2HardwareOnlinePayload;
     [V2_EVENTS.REGISTERED]: V2SourceRegisteredPayload;
     [V2_EVENTS.PROP_UPDATE]: V2PropertyUpdatePayload;
+    [V2_EVENTS.LOG_RECEIVED]: V2LogPayload;
 }
 
 // For now we define these type informations here
@@ -174,6 +183,12 @@ export class MqttApiV2 extends EventEmitter { // eslint-disable-line @typescript
                 break;
             case 'app/info':
                 await this.handleAppInfo(componentId, payload);
+                break;
+            case 'system/log':
+                await this.handleLog(componentId, 'system', payload);
+                break;
+            case 'app/log':
+                await this.handleLog(componentId, 'app', payload);
                 break;
             case 'app/prop':
                 await this.handlePropertyRegistration(
@@ -451,6 +466,31 @@ export class MqttApiV2 extends EventEmitter { // eslint-disable-line @typescript
         } catch (e) {
             console.error(e);
         }
+    }
+    /**
+     * Handles a log published by hardware
+     *
+     * @param {string} componentId - parsed HardwareId
+     * @param {V2Source} source - where the log payload was generated
+     * @param {Buffer} payload - the log payload
+     */
+    async handleLog (componentId: string, source: V2Source, payload: Buffer): Promise<void> {
+        let log: V2Log;
+        try {
+            log = await this.packetParser.parseLog(payload);
+        } catch (e) {
+            const message = `Failed to handle incomming log for componentId: ${componentId}`;
+            console.error(message);
+            if (isNativeError(e)) {
+                console.error(e.message);
+            } else {
+                console.error(e);
+            }
+
+            throw new Error(message);
+        }
+        this.emit(V2_EVENTS.LOG_RECEIVED, { componentId, source, log });
+        return;
     }
 
     /**

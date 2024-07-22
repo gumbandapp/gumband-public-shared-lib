@@ -547,3 +547,36 @@ describe('packPropertyValue', () => {
         });
     });
 });
+
+describe('Parse log', ()=>{
+    it('should return the log when all properties are valid', async ()=>{
+        const testLog = { severity: 'debug', text: 'testLog' };
+        const testBuffer = Buffer.from(JSON.stringify(testLog));
+
+        expect(await testPacketParser.parseLog(testBuffer)).toEqual(testLog);
+    });
+
+    it('should throw an error if severity is missing', async ()=>{
+        const testLog = { text: 'testLog' };
+        const testBuffer = Buffer.from(JSON.stringify(testLog));
+        await expect(testPacketParser.parseLog(testBuffer))
+            .rejects
+            .toThrow('log severity must be declared');
+    });
+
+    it('should throw an error if severity is wrong type', async ()=>{
+        const testLog = { severity: 'consolelog', text: 'testLog' };
+        const testBuffer = Buffer.from(JSON.stringify(testLog));
+        await expect(testPacketParser.parseLog(testBuffer))
+            .rejects
+            .toThrow('log severity must be of a known level');
+    });
+
+    it('should throw an error if text is not a string', async ()=>{
+        const testLog = { severity: 'debug', text: 1 };
+        const testBuffer = Buffer.from(JSON.stringify(testLog));
+        await expect(testPacketParser.parseLog(testBuffer))
+            .rejects
+            .toThrow('log message must be a string');
+    });
+});
