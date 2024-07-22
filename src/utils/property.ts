@@ -16,7 +16,15 @@ import { exhaustiveGuard } from './usefulTS';
 export const publishApplicationValue = async (client: MqttClient, componentId: string, propertyPath: string, value: Buffer, source: AnySource, apiVersion: ApiVersion) => {
     switch (apiVersion) {
         case 2:
-            client.publish(v2PropSetEndpoint(componentId, propertyPath, source), value);
+            await new Promise<void>((resolve, reject) => {
+                client.publish(v2PropSetEndpoint(componentId, propertyPath, source), value, (error?: Error) => {
+                    if (error) {
+                        reject(error);
+                    } else {
+                        resolve();
+                    }
+                });
+            });
             break;
         default:
             exhaustiveGuard(apiVersion);
