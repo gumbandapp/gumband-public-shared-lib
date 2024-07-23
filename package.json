@@ -1,6 +1,6 @@
 {
   "name": "@deeplocal/gumband-public-shared-lib",
-  "version": "0.0.24-alpha-GUM-1468-update-exports.2",
+  "version": "0.0.24-alpha-GUM-1468-update-exports.3",
   "description": "A publicly shared library package for the Gumband Ecosystem",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
