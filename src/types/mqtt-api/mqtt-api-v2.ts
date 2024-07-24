@@ -112,6 +112,11 @@ export type V2Connections = {
     servers: Array<V2ConnectionSummary>
 };
 
+export type V2Log = {
+    severity: 'debug' | 'error' | 'warning',
+    text: string,
+}
+
 export interface V2ConnectionStatus extends V2ConnectionSummary {
     // TODO make the status value more explicit.
     status: number, // 1 indicates healthy connection, 0 or negative number corresponds to specific error code: 0 - not connected, -1 - can't find, -2 - bad auth, ...
@@ -134,6 +139,8 @@ export const V2ApiTopics = [
     'app/info',
     'app/register/prop',
     'app/prop',
+    'app/log',
+    'system/log',
 ] as const;
 
 

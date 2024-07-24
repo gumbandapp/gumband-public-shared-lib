@@ -5,7 +5,7 @@ import { isNativeError } from 'util/types';
 import Long from 'long';
 import struct, { DataType } from 'python-struct';
 import { GMBND_COLOR_FORMAT, GMBND_LED_FORMAT } from '.';
-import { V2ApiVersion, V2ApiVersions, V2ApplicationInfo, V2BasePropertyValue, V2JsonExtendedPropertyValue, V2JsonPropertyValue, V2Platform, V2PropertyFormat, V2PropertyFormatInfo, V2PropertyRegistration, V2PropertyType, V2PropertyTypes, V2SystemInfo, V2SystemType, V2SystemTypes, V2UnpackedPropertyValue } from '../../types';
+import { V2ApiVersion, V2ApiVersions, V2ApplicationInfo, V2BasePropertyValue, V2JsonExtendedPropertyValue, V2JsonPropertyValue, V2Log, V2Platform, V2PropertyFormat, V2PropertyFormatInfo, V2PropertyRegistration, V2PropertyType, V2PropertyTypes, V2SystemInfo, V2SystemType, V2SystemTypes, V2UnpackedPropertyValue } from '../../types';
 import { exhaustiveGuard } from '../../utils/usefulTS';
 
 
@@ -458,6 +458,49 @@ export class V2PacketParser {
             throw new Error('num_props is not an integer');
         }
         return numProps;
+    }
+
+    /**
+     * This function attempts to decode a Buffer payload into a V2Log object.
+     * @param {Buffer} payload - Buffer object that is expected to be an V2Log packet that's been JSON encoded and then utf-8 encoded
+     * @return {Promise<V2Log>}
+     */
+    async parseLog (payload: Buffer): Promise<V2Log> {
+        console.log('MqttApiV2Parser.parseProperty()');
+        let jsonPayload;
+        try {
+            const decodedPayload = payload.toString('utf-8');
+            jsonPayload = JSON.parse(decodedPayload);
+        } catch (e) {
+            const message = `Payload could not be JSON parsed: ${payload}`;
+            console.error(message);
+            if (isNativeError(e)) {
+                console.error(e.message);
+            }
+            throw new Error(message);
+        }
+
+        console.debug('Received log:', jsonPayload);
+        return this.validateLog(jsonPayload);
+    }
+
+    /**
+     * This function validates the properties of a new log
+     * @param {V2Log} log - the log packet to validate
+     * @return {V2Log} the parsed log
+     */
+    validateLog (log: V2Log): V2Log {
+        if (log.severity === undefined) {
+            throw new Error('log severity must be declared');
+        }
+        if (!['debug', 'error', 'warning'].includes(log.severity)) {
+            throw new Error('log severity must be of a known level');
+        }
+        if (typeof log.text !== 'string') {
+            throw new Error('log message must be a string');
+        }
+
+        return log as V2Log;
     }
 
     /**
