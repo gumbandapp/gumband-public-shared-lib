@@ -59,6 +59,7 @@
         "name": "util",
         "message": "causes issues when used in browser"
       }]
-    }]
+    }],
+    "no-process-env": "error"
   }
 }
