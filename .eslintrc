@@ -53,6 +53,12 @@
       }
     ],
     "semi": ["error", "always"],
-    "no-invalid-this": "off"
+    "no-invalid-this": "off",
+    "no-restricted-imports": ["error", {
+      "paths": [{
+        "name": "util",
+        "message": "causes issues when used in browser"
+      }]
+    }]
   }
 }
