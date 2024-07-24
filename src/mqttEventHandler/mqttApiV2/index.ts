@@ -190,14 +190,14 @@ export class MqttApiV2 extends EventEmitter { // eslint-disable-line @typescript
             case 'app/log':
                 await this.handleLog(componentId, 'app', payload);
                 break;
-            case 'app/prop':
+            case 'app/register/prop':
                 await this.handlePropertyRegistration(
                     componentId,
                     'app',
                     payload,
                 );
                 break;
-            case 'system/prop':
+            case 'system/register/prop':
                 await this.handlePropertyRegistration(
                     componentId,
                     'system',
@@ -206,11 +206,12 @@ export class MqttApiV2 extends EventEmitter { // eslint-disable-line @typescript
                 break;
             default: {
                 // Format:
-                // <source>/prop/<group>/<group>/.../<property>
+                // <source>/prop/<action>/<indexExpr>/<group>/<group>/.../<property>
                 const splitTopic = topic.split('/');
-                if (splitTopic[1] == 'prop') {
+                // NOTE: The indexed publish feature is not fully implemented so currently only "full" publishes are listened to, indicated by the ":" index expression.
+                if (splitTopic[1] === 'prop' && splitTopic[2] === 'pub' && splitTopic[3] === ':') {
                     const source = splitTopic[0];
-                    const propPath = splitTopic.splice(2);
+                    const propPath = splitTopic.splice(4);
 
                     if (!isV2Source(source)) {
                         throw new Error(`${source} is not a valid V2 API source`);

@@ -6,7 +6,7 @@ import EventEmitter from 'events';
 import mqtt from 'mqtt';
 import { isNativeError } from 'util/types';
 import { IHardwareRegistrationCache } from '../hardwareRegistrationCache';
-import { ApiVersion, MQTTInitialRegistrationTopic, V2ApiTopic, isMQTTInitialRegistrationTopic } from '../types';
+import { ApiVersion, MQTTInitialRegistrationTopic, V2ApiTopic, V2SystemInfoTopic, isMQTTInitialRegistrationTopic } from '../types';
 import { exhaustiveGuard } from '../utils/usefulTS';
 import { MqttApiV2 } from './mqttApiV2';
 
@@ -96,7 +96,7 @@ export class MQTTEventHandler extends EventEmitter {
     private async getApiVersionFromRegistrationTopic (_componentId: string, topic: MQTTInitialRegistrationTopic, payload: Buffer): Promise<ApiVersion | undefined> {
         console.debug('baseMqttPacketHandler.registerSystem()');
         switch (topic) {
-            case 'system/info':
+            case V2SystemInfoTopic:
             {
                 let jsonPayload;
                 try {
@@ -110,7 +110,7 @@ export class MQTTEventHandler extends EventEmitter {
                     }
                     throw new Error(message);
                 }
-                console.debug('Received system info:', jsonPayload);
+                console.debug(`Received ${topic}:`, jsonPayload);
                 return jsonPayload?.api_ver;
             }
             default:

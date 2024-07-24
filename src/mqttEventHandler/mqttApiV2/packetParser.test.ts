@@ -436,6 +436,7 @@ describe('unpackJsonPropertyValue', () => {
             describe('when format is "s"', () => {
                 beforeEach(() => {
                     mockPropertyRegistration.format = 's';
+                    mockPropertyRegistration.length = 100;
                 });
 
                 it('should return the first value wrapped in another array when the first element is a string', () => {
@@ -447,10 +448,17 @@ describe('unpackJsonPropertyValue', () => {
                     const stubStringValue = 'stub-string';
                     expect(testPacketParser.unpackJsonPropertyValue([stubStringValue, 2, true, 'another-string'], mockPropertyRegistration)).toEqual([[stubStringValue]]);
                 });
+
+                it('should truncate string length to registered length if passed in value is too long', () => {
+                    const stubStringValue = 'stub-string';
+                    mockPropertyRegistration.length = 4;
+                    expect(testPacketParser.unpackJsonPropertyValue([stubStringValue], mockPropertyRegistration)).toEqual([[stubStringValue.substring(0, 4)]]);
+                });
             });
 
             it('should wrap all primitive values in sub arrays', () => {
                 const stubPrimitiveValues = [1, 2, 3, 4];
+                mockPropertyRegistration.length = 4;
                 expect(testPacketParser.unpackJsonPropertyValue(stubPrimitiveValues, mockPropertyRegistration)).toEqual([[1], [2], [3], [4]]);
             });
         });

@@ -872,6 +872,11 @@ export class V2PacketParser {
             let formatString = propertyRegistration.format;
             // The string packing is a bit weird, it can't be iteratively unpacked like the other types since "s", means a string of size 1
             if (propertyRegistration.type == 'gmbnd_primitive' && propertyRegistration.format.includes('s')) {
+                // This doesn't handle the empty string case very well, so we'll just special case it
+                if (payload.length === 0) {
+                    return [['']];
+                }
+
                 const stringBufferLen = Math.min(propertyRegistration.length, payload.length);
                 formatString = String(stringBufferLen) + propertyRegistration.format;
             }
@@ -966,23 +971,18 @@ export class V2PacketParser {
             case 'gmbnd_primitive':
                 if (PROPERTY_FORMAT_STRING_REGEX.test(propertyRegistration.format) && typeof value[0] === 'string') {
                     // We expect 's' format props to only have a single string in the array
-                    // Also we ignore propertyRegistration.length at this point
-                    return [[value[0]]];
-                }
-                // eslint-disable-next-line no-case-declarations
-                let i = 0;
-                while (i<value.length) {
-                    const subArr = [];
-                    for (let j = 0; j<propertyRegistration.length; j++) {
-                        subArr.push(value[i]);
-                        i+=1;
-                        if (i>value.length) {
-                            break;
-                        }
+                    // Truncate to registered length if value is too long
+                    if (value[0].length > propertyRegistration.length) {
+                        return [[value[0].substring(0, propertyRegistration.length)]];
+                    } else {
+                        return [[value[0]]];
                     }
-                    // We do this cast because we know the typing to be true from property registration type
-                    unpackedDataArr.push(subArr as V2BasePropertyValue);
                 }
+
+                for (let i = 0; i < propertyRegistration.length && value.length; i++) {
+                    unpackedDataArr.push([value[i] as DataType]);
+                }
+
                 return unpackedDataArr;
             case 'gmbnd_color':
                 customDataFormat = GMBND_COLOR_FORMAT;

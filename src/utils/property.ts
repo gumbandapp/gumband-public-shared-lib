@@ -1,5 +1,5 @@
 import { MqttClient } from 'mqtt/*';
-import { ApiVersion } from '../types';
+import { AnySource, ApiVersion, v2PropSetEndpoint } from '../types';
 import { exhaustiveGuard } from './usefulTS';
 
 
@@ -13,10 +13,18 @@ import { exhaustiveGuard } from './usefulTS';
  * @param {string} source - which source to publish the value to
  * @param {ApiVersion} apiVersion - which version of the API to use
  */
-export const publishApplicationValue = async (client: MqttClient, componentId: string, propertyPath: string, value: Buffer, source: string, apiVersion: ApiVersion) => {
+export const publishApplicationValue = async (client: MqttClient, componentId: string, propertyPath: string, value: Buffer, source: AnySource, apiVersion: ApiVersion) => {
     switch (apiVersion) {
         case 2:
-            await client.publish(`${componentId}/${source}/prop/${propertyPath}/set`, value);
+            await new Promise<void>((resolve, reject) => {
+                client.publish(v2PropSetEndpoint(componentId, propertyPath, source), value, (error?: Error) => {
+                    if (error) {
+                        reject(error);
+                    } else {
+                        resolve();
+                    }
+                });
+            });
             break;
         default:
             exhaustiveGuard(apiVersion);
