@@ -36,21 +36,6 @@ export const validateV1ExhibitId = (exhibitId: string | number): number => {
 };
 
 /**
- * Validates the given component v1 exhibitId for looking up a database query
- *
- * @param {string | number} exhibitId - the unvalidated v1 exhibitId
- * @throws an error object if the exhibitId is not a positive integer or positive integer string
- * @return {number} exhibitId as a number (which is what is used for the v1 exhibit-management api)
- */
-export const validateV1ExhibitIdDatabase = (exhibitId: string | number): number => {
-    if (typeof exhibitId === 'string' && exhibitId.match(/^[1-9]([0-9]?)+$/)) {
-        return parseInt(exhibitId);
-    }
-    throw new Error('exhibitId is not a positive integer string');
-};
-
-
-/**
  * Validates the given component order
  *
  * @param {number} order - the unvalidated order

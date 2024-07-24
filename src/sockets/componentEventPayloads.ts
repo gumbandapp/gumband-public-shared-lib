@@ -18,6 +18,19 @@ export const COMPONENT_CATEGORY = {
 
 export type ComponentCategory = ObjectValues<typeof COMPONENT_CATEGORY>;
 
+/**
+ * Type guard for the ComponentCategory type
+ *
+ * @param {unknown} componentCategory - the unknown ComponentCategory
+ * @return {boolean} - true if typeof componentCategory is ComponentCategory
+ */
+export function isComponentCategory (componentCategory: unknown): componentCategory is ComponentCategory {
+    return (
+        typeof componentCategory === 'string' &&
+        Object.values(COMPONENT_CATEGORY).includes(componentCategory as ComponentCategory)
+    );
+}
+
 export const COMPONENT_TYPE = {
     CUSTOM_APPLICATION: 'custom-application',
     OS_MONITOR: 'os-monitor',

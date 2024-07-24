@@ -1,5 +1,4 @@
 import EventEmitter from 'events';
-import util from 'util';
 import type { AnySource, ApiVersion, ApplicationInfo, AppRegistration, SystemInfo, SystemRegistration, HardwareRegistration, PropertyRegistration } from '../types/mqtt-api';
 import { IHardwareRegistrationCache } from './IHardwareRegistrationCache';
 
@@ -295,7 +294,7 @@ export class HardwareRegistrationCache extends EventEmitter implements IHardware
     logRegistrationHash (): void {
         if (this.logHashOnChange) {
             console.debug('In memory registration cache:');
-            console.debug(util.inspect(this.registrationHash, { depth: 10, colors: true }));
+            console.debug(JSON.stringify(this.registrationHash, null, 2));
         }
     }
 }
