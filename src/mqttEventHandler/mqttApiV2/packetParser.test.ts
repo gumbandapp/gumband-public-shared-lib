@@ -1,9 +1,9 @@
-import { beforeEach, describe, expect, it } from '@jest/globals';
-import { V2PacketParser } from './packetParser';
+import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
 import Long from 'long';
+import struct, { DataType } from 'python-struct';
 import { V2PropertyRegistration } from '../../types/mqtt-api/mqtt-api-v2';
 import { generateRandomNumber } from '../../utils/testResources';
-import struct, { DataType } from 'python-struct';
+import { V2PacketParser } from './packetParser';
 
 const testPacketParser = new V2PacketParser();
 
@@ -22,6 +22,7 @@ describe('ValidatePropertyValueBoundaries', () => {
                 min: 0,
                 max: 0,
             };
+            console.log = jest.fn().mockImplementation(() => {});
         });
 
         it('Throws an error when a number value is less than the min', async ()=>{
@@ -557,6 +558,14 @@ describe('packPropertyValue', () => {
 });
 
 describe('Parse log', ()=>{
+    beforeEach(() => {
+        console.log = jest.fn().mockImplementation(() => { });
+        console.debug = jest.fn().mockImplementation(() => { });
+    });
+    afterEach(() => {
+        jest.restoreAllMocks();
+    });
+
     it('should return the log when all properties are valid', async ()=>{
         const testLog = { severity: 'debug', text: 'testLog' };
         const testBuffer = Buffer.from(JSON.stringify(testLog));
