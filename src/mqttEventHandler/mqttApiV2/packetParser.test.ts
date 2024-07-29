@@ -22,6 +22,7 @@ describe('ValidatePropertyValueBoundaries', () => {
                 min: 0,
                 max: 0,
             };
+            // eslint-disable-next-line no-console -- This is mock so it's fine
             console.log = jest.fn().mockImplementation(() => {});
         });
 
@@ -559,7 +560,9 @@ describe('packPropertyValue', () => {
 
 describe('Parse log', ()=>{
     beforeEach(() => {
+        // eslint-disable-next-line no-console -- This is a mock so it's fine
         console.log = jest.fn().mockImplementation(() => { });
+        // eslint-disable-next-line no-console -- This is a mock so it's fine
         console.debug = jest.fn().mockImplementation(() => { });
     });
     afterEach(() => {
