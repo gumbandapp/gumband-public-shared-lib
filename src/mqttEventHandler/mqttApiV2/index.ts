@@ -5,18 +5,19 @@ import { IHardwareRegistrationCache } from '../../hardwareRegistrationCache';
 import {
     AnySource,
     ApplicationInfo,
+    isV2Source,
     PropertyRegistration,
     SystemInfo,
     V2ApiTopic,
+    V2JsonPropertyValue,
+    V2Log,
     V2PropertyFormat,
     V2PropertyRegistration,
     V2Source,
     V2SystemInfo,
     V2UnpackedPropertyValue,
-    isV2Source,
-    V2JsonPropertyValue,
-    V2Log,
 } from '../../types';
+import { GbLogger } from '../../utils/gbLogger';
 import { exhaustiveGuard } from '../../utils/usefulTS';
 import { lockRegistrationCacheAndPerformAction } from '../common';
 import { V2PacketParser } from './packetParser';
@@ -154,6 +155,7 @@ export class MqttApiV2 extends EventEmitter { // eslint-disable-line @typescript
     registrationTimeouts: Record<V2Source, Record<string, NodeJS.Timeout>>;
     cache: IHardwareRegistrationCache;
     packetParser: V2PacketParser;
+    protected logger: GbLogger;
 
     /**
      * Default Constructor
@@ -164,6 +166,7 @@ export class MqttApiV2 extends EventEmitter { // eslint-disable-line @typescript
         this.registrationTimeouts = { 'app': {}, 'system': {} };
         this.cache = cache;
         this.packetParser = new V2PacketParser();
+        this.logger = new GbLogger({ name: 'MqttApiV2' });
     }
 
     /**
@@ -244,7 +247,7 @@ export class MqttApiV2 extends EventEmitter { // eslint-disable-line @typescript
             try {
                 await lockRegistrationCacheAndPerformAction(this.cache, new Set(['system', 'app']), componentId, async () => this.cache.clearAllCacheForComponentId(componentId));
             } catch (e) {
-                console.error(e);
+                this.logger.error(e);
             }
             return;
         }
@@ -256,22 +259,22 @@ export class MqttApiV2 extends EventEmitter { // eslint-disable-line @typescript
             systemInfo = await this.packetParser.parseSystemInfo(payload);
         } catch (reason) {
             let message = `Failed to unpack system/info payload for componentId: ${componentId}`;
-            console.debug(message);
+            this.logger.debug(message);
             if (isNativeError(reason)) {
-                console.debug('Reason:', reason.message);
+                this.logger.debug(`Reason: ${reason.message}`);
                 message += `. Reason: ${reason.message}`;
             }
 
-            console.debug('Clearing System and Application Registration from cache for componentId:', componentId);
+            this.logger.debug(`Clearing System and Application Registration from cache for componentId: ${componentId}`);
             try {
                 await lockRegistrationCacheAndPerformAction(this.cache, new Set(['system', 'app']), componentId, async () => this.cache.clearAllCacheForComponentId(componentId));
             } catch (e) {
                 const message = `Failed to clear system info cache for componentId: ${componentId}`;
-                console.error(message);
+                this.logger.error(message);
                 if (isNativeError(e)) {
-                    console.error(e.message);
+                    this.logger.error(e.message);
                 } else {
-                    console.error(e);
+                    this.logger.error(e);
                 }
             }
         }
@@ -283,11 +286,11 @@ export class MqttApiV2 extends EventEmitter { // eslint-disable-line @typescript
             });
         } catch (e) {
             const message = `Failed to cache system info registration for componentId: ${componentId}`;
-            console.error(message);
+            this.logger.error(message);
             if (isNativeError(e)) {
-                console.error(e.message);
+                this.logger.error(e.message);
             } else {
-                console.error(e);
+                this.logger.error(e);
             }
 
             // TODO [GUM-1297]: determine error handling for this:
@@ -313,16 +316,16 @@ export class MqttApiV2 extends EventEmitter { // eslint-disable-line @typescript
                 const applicationRegistrationPreviouslyCompleted = await this.cache.isRegistered(componentId, 'app');
 
                 if (applicationRegistrationPreviouslyCompleted) {
-                    console.info(`Stray app/info message received for componentId: ${componentId}. Clearing cached application registration.`);
+                    this.logger.info(`Stray app/info message received for componentId: ${componentId}. Clearing cached application registration.`);
                     try {
                         await this.cache.clearCachedValues(componentId, 'app');
                     } catch (e) {
                         const message = `Failed to clear application registration from cache for componentId: ${componentId}`;
-                        console.error(message);
+                        this.logger.error(message);
                         if (isNativeError(e)) {
-                            console.error(e.message);
+                            this.logger.error(e.message);
                         } else {
-                            console.error(e);
+                            this.logger.error(e);
                         }
 
                         throw new Error(message);
@@ -335,9 +338,9 @@ export class MqttApiV2 extends EventEmitter { // eslint-disable-line @typescript
                     appInfo = await this.packetParser.parseApplicationInfo(payload);
                 } catch (reason) {
                     let message = `Invalid app/info payload for componentId: ${componentId}`;
-                    console.debug(message);
+                    this.logger.debug(message);
                     if (isNativeError(reason)) {
-                        console.debug('Reason:', reason.message);
+                        this.logger.debug(`Reason: ${reason.message}`);
                         message += `. Reason: ${reason.message}`;
                     }
 
@@ -348,11 +351,11 @@ export class MqttApiV2 extends EventEmitter { // eslint-disable-line @typescript
                     await this.cache.cacheApplicationInfo(componentId, appInfo);
                 } catch (e) {
                     const message = `Failed to cache Application Info for componentId: ${componentId}`;
-                    console.error(message);
+                    this.logger.error(message);
                     if (isNativeError(e)) {
-                        console.error(e.message);
+                        this.logger.error(e.message);
                     } else {
-                        console.error(e);
+                        this.logger.error(e);
                     }
 
                     throw new Error(message);
@@ -362,7 +365,7 @@ export class MqttApiV2 extends EventEmitter { // eslint-disable-line @typescript
                 this.setRegistrationTimeoutForComponentIdAndSource(componentId, 'app');
             });
         } catch (e) {
-            console.error(e);
+            this.logger.error(e);
         }
     }
 
@@ -380,16 +383,16 @@ export class MqttApiV2 extends EventEmitter { // eslint-disable-line @typescript
                 const registrationPreviouslyCompleted = await this.cache.isRegistered(componentId, source);
 
                 if (registrationPreviouslyCompleted) {
-                    console.info(`Stray ${source} prop message received for componentId: ${componentId}. Clearing cached registration.`);
+                    this.logger.info(`Stray ${source} prop message received for componentId: ${componentId}. Clearing cached registration.`);
                     try {
                         await Promise.all([this.cache.clearProperties(componentId, source), this.cache.setRegistered(componentId, source, false)]);
                     } catch (e) {
                         const message = `Failed to clear application registration from cache for componentId: ${componentId}`;
-                        console.error(message);
+                        this.logger.error(message);
                         if (isNativeError(e)) {
-                            console.error(e.message);
+                            this.logger.error(e.message);
                         } else {
-                            console.error(e);
+                            this.logger.error(e);
                         }
 
                         throw new Error(message);
@@ -402,9 +405,9 @@ export class MqttApiV2 extends EventEmitter { // eslint-disable-line @typescript
                     prop = await this.packetParser.parseProperty(payload);
                 } catch (reason) {
                     let message = `Failed to unpack ${source} prop payload for componentId: ${componentId}`;
-                    console.debug(message);
+                    this.logger.debug(message);
                     if (isNativeError(reason)) {
-                        console.debug('Reason:', reason.message);
+                        this.logger.debug(`Reason: ${reason.message}`);
                         message += `. Reason: ${reason.message}`;
                     }
 
@@ -416,11 +419,11 @@ export class MqttApiV2 extends EventEmitter { // eslint-disable-line @typescript
                     registeredProps = await this.cache.getAllProperties(componentId, source);
                 } catch (e) {
                     const message = `Failed to get ${source} properties from cache for componentId: ${componentId}`;
-                    console.error(message);
+                    this.logger.error(message);
                     if (isNativeError(e)) {
-                        console.error(e.message);
+                        this.logger.error(e.message);
                     } else {
-                        console.error(e);
+                        this.logger.error(e);
                     }
 
                     throw new Error(message);
@@ -439,9 +442,9 @@ export class MqttApiV2 extends EventEmitter { // eslint-disable-line @typescript
                     });
                 } catch (reason) {
                     let message = 'New property is not compatible with previously registered properties';
-                    console.debug(message);
+                    this.logger.debug(message);
                     if (isNativeError(reason)) {
-                        console.debug('Reason:', reason.message);
+                        this.logger.debug(`Reason: ${reason.message}`);
                         message += `. Reason: ${reason.message}`;
                     }
 
@@ -452,11 +455,11 @@ export class MqttApiV2 extends EventEmitter { // eslint-disable-line @typescript
                     await this.cache.cacheProperty(componentId, source, prop.path, prop);
                 } catch (e) {
                     const message = `Failed to cache ${source} Property for componentId: ${componentId}`;
-                    console.error(message);
+                    this.logger.error(message);
                     if (isNativeError(e)) {
-                        console.error(e.message);
+                        this.logger.error(e.message);
                     } else {
-                        console.error(e);
+                        this.logger.error(e);
                     }
 
                     return;
@@ -465,7 +468,7 @@ export class MqttApiV2 extends EventEmitter { // eslint-disable-line @typescript
                 this.setRegistrationTimeoutForComponentIdAndSource(componentId, source);
             });
         } catch (e) {
-            console.error(e);
+            this.logger.error(e);
         }
     }
     /**
@@ -481,11 +484,11 @@ export class MqttApiV2 extends EventEmitter { // eslint-disable-line @typescript
             log = await this.packetParser.parseLog(payload);
         } catch (e) {
             const message = `Failed to handle incomming log for componentId: ${componentId}`;
-            console.error(message);
+            this.logger.error(message);
             if (isNativeError(e)) {
-                console.error(e.message);
+                this.logger.error(e.message);
             } else {
-                console.error(e);
+                this.logger.error(e);
             }
 
             throw new Error(message);
@@ -531,17 +534,17 @@ export class MqttApiV2 extends EventEmitter { // eslint-disable-line @typescript
             registeredProperty = await this.cache.getProperty(componentId, source, propTopic);
         } catch (e) {
             const message = `Failed to get ${source} property "${propTopic}" from the cache`;
-            console.error(message);
+            this.logger.error(message);
             if (isNativeError(e)) {
-                console.debug(e.message);
+                this.logger.debug(e.message);
             } else {
-                console.debug(e);
+                this.logger.debug(e);
             }
             return;
         }
 
         if (registeredProperty === undefined) {
-            console.error(`Invalid ${source} property registration for, "${propTopic}" in the cache`);
+            this.logger.error(`Invalid ${source} property registration for, "${propTopic}" in the cache`);
             return;
         }
 
@@ -549,7 +552,7 @@ export class MqttApiV2 extends EventEmitter { // eslint-disable-line @typescript
             // Pass Format and buffer to parser
             const unpackedPayload = this.packetParser.parsePropertyValue(payload, registeredProperty);
             const formattedPayload = this.packetParser.jsonFormatPropertyValue(unpackedPayload, registeredProperty);
-            console.log(`format: "${registeredProperty.format}", unpackedPayload: ${JSON.stringify(unpackedPayload)}, jsonPayload: ${formattedPayload}`);
+            this.logger.info(`format: "${registeredProperty.format}", unpackedPayload: ${JSON.stringify(unpackedPayload)}, jsonPayload: ${formattedPayload}`);
             this.emit(V2_EVENTS.PROP_UPDATE, {
                 componentId,
                 source,
@@ -561,7 +564,7 @@ export class MqttApiV2 extends EventEmitter { // eslint-disable-line @typescript
             });
         } catch (e) {
             const message = `Parsing failed for ${source} property ${propTopic} from ${componentId}`;
-            console.error(message);
+            this.logger.error(message);
         }
     }
 
@@ -591,11 +594,11 @@ export class MqttApiV2 extends EventEmitter { // eslint-disable-line @typescript
             try {
                 this.checkRegistrationForComponentIdAndSource(componentId, source);
             } catch (e) {
-                console.error('Error occurred while evaluating application registration');
+                this.logger.error('Error occurred while evaluating application registration');
                 if (isNativeError(e)) {
-                    console.debug(e.message);
+                    this.logger.debug(e.message);
                 } else {
-                    console.debug(e);
+                    this.logger.debug(e);
                 }
             }
         }, 3 * 1000); // TODO: make this more dynamic
@@ -615,13 +618,13 @@ export class MqttApiV2 extends EventEmitter { // eslint-disable-line @typescript
                 try {
                     if (await this.cache.isRegistered(componentId, source)) {
                         // Because this method could run in one instance of the listener after another instance of the listener has already determined that the application is register, this early return saves processing at scale
-                        console.log(`determined ${source} was previously registered -> no-op`);
+                        this.logger.info(`determined ${source} was previously registered -> no-op`);
                         return;
                     }
                 } catch (e) {
                     const message = `Failed to get ${source} iRegistered from the cache`;
-                    console.error(message);
-                    console.error(e);
+                    this.logger.error(message);
+                    this.logger.error(e);
                     throw new Error(message);
                 }
 
@@ -640,11 +643,11 @@ export class MqttApiV2 extends EventEmitter { // eslint-disable-line @typescript
                     }
                 } catch (e) {
                     const message = `Unable to get ${source} from the cache`;
-                    console.error(message);
+                    this.logger.error(message);
                     if (isNativeError(e)) {
-                        console.debug(e.message);
+                        this.logger.debug(e.message);
                     } else {
-                        console.debug(e);
+                        this.logger.debug(e);
                     }
                     throw new Error(message);
                 }
@@ -660,11 +663,11 @@ export class MqttApiV2 extends EventEmitter { // eslint-disable-line @typescript
                     registeredProperties = await this.cache.getAllProperties(componentId, source);
                 } catch (e) {
                     const message = `Failed to get ${source} properties from the cache`;
-                    console.error(message);
+                    this.logger.error(message);
                     if (isNativeError(e)) {
-                        console.debug(e.message);
+                        this.logger.debug(e.message);
                     } else {
-                        console.debug(e);
+                        this.logger.debug(e);
                     }
                     throw new Error(message);
                 }
@@ -674,16 +677,16 @@ export class MqttApiV2 extends EventEmitter { // eslint-disable-line @typescript
                     (!registeredProperties && expectNumberOfProps === 0)
                 ) {
                     // The application registration is complete!
-                    console.log(`${source} Registered!`);
+                    this.logger.info(`${source} Registered!`);
                     try {
                         await this.cache.setRegistered(componentId, source, true);
                     } catch (e) {
                         const message = `[Critical] Failed to set ${source} isRegistered to true in the cache`;
-                        console.error(message);
+                        this.logger.error(message);
                         if (isNativeError(e)) {
-                            console.debug(e.message);
+                            this.logger.debug(e.message);
                         } else {
-                            console.debug(e);
+                            this.logger.debug(e);
                         }
                         throw new Error(message);
                     }
@@ -695,7 +698,7 @@ export class MqttApiV2 extends EventEmitter { // eslint-disable-line @typescript
                 }
             });
         } catch (e) {
-            console.error(e);
+            this.logger.error(e);
         }
     }
 
