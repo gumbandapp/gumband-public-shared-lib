@@ -67,7 +67,7 @@ export class MQTTEventHandler extends EventEmitter {
             const message = `Unable to get MQTT API Version from cache for componentId: ${componentId}`;
             this.logger.error(message);
             this.logger.error(`Payload: ${JSON.stringify(payload)}`);
-            this.logger.error(`Error: ${e}`);
+            this.logger.error(`Error: ${JSON.stringify(e)}`);
             return;
         }
 

@@ -299,7 +299,7 @@ export class HardwareRegistrationCache extends EventEmitter implements IHardware
     logRegistrationHash (): void {
         if (this.logHashOnChange) {
             this.logger.debug('In memory registration cache:');
-            this.logger.debug(JSON.stringify(this.registrationHash, null, 2));
+            this.logger.debug(JSON.stringify(this.registrationHash));
         }
     }
 }

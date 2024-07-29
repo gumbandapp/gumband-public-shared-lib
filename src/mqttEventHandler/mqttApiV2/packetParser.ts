@@ -67,7 +67,7 @@ export class V2PacketParser {
             throw new Error(message);
         }
 
-        this.logger.debug(`Received system info: ${JSON.stringify(jsonPayload, null, 2)}`);
+        this.logger.debug(`Received system info: ${JSON.stringify(jsonPayload)}`);
         return this.validateSystemInfo(jsonPayload);
     }
 
@@ -385,7 +385,7 @@ export class V2PacketParser {
             throw new Error(message);
         }
 
-        this.logger.debug(`Received app info: ${JSON.stringify(jsonPayload, null, 2)}`);
+        this.logger.debug(`Received app info: ${JSON.stringify(jsonPayload)}`);
         return this.validateApplicationInfo(jsonPayload);
     }
 
@@ -542,7 +542,7 @@ export class V2PacketParser {
             throw new Error(message);
         }
 
-        this.logger.debug(`Received property: ${JSON.stringify(jsonPayload, null, 2)}`);
+        this.logger.debug(`Received property: ${JSON.stringify(jsonPayload)}`);
         return this.validateProperty(jsonPayload);
     }
 
