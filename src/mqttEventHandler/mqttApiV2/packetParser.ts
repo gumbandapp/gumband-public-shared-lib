@@ -1,5 +1,5 @@
+import CONFIG from '../../config';
 import { GbLogger } from './../../utils/gbLogger';
-
 
 import { isNativeError } from 'util/types';
 
@@ -22,9 +22,6 @@ const PROPERTY_FORMAT_STRING_REGEX = /^[@=!<>]?(s)+$/;
 const MAC_ADDRESS_REGEX = /^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$/;
 const INVALID_PROPERTY_PATH_CHARS = /[^\x20-\x22\x25-\x2A\x2C-\x7E]/; // Negated set of all printable characters except #, $, + and <DEL> (see: https://web.itu.edu.tr/sgunduz/courses/mikroisl/ascii.html)
 
-type V2PacketParserOpts = {
-    level?: string;
-}
 
 /**
  * V2PacketParser class.
@@ -38,11 +35,11 @@ export class V2PacketParser {
      * @param {object} opts - Options for the logger
      * @param {string} opts.level - The default log level for this logger, see
      */
-    constructor (opts?: V2PacketParserOpts ) {
+    constructor () {
         this.logger = new GbLogger({
             name: 'MqttParser',
             // Include the log level from the constructor args, or default if none are provided
-            level: opts?.level || 'info',
+            level: CONFIG.LOCAL_GBLOGGER_LEVEL,
         });
     }
     /**

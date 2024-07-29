@@ -1,8 +1,8 @@
 import EventEmitter from 'events';
+import CONFIG from '../config';
 import type { AnySource, ApiVersion, ApplicationInfo, AppRegistration, HardwareRegistration, PropertyRegistration, SystemInfo, SystemRegistration } from '../types/mqtt-api';
 import { GbLogger } from '../utils/gbLogger';
 import { IHardwareRegistrationCache } from './IHardwareRegistrationCache';
-
 type PartialAppRegistration = Partial<AppRegistration> & Pick<AppRegistration, 'properties'>;
 type PartialSystemRegistration = Partial<SystemRegistration> & Pick<SystemRegistration, 'properties'>;
 
@@ -51,6 +51,7 @@ export class HardwareRegistrationCache extends EventEmitter implements IHardware
         this.emit('ready');
         this.logger = new GbLogger({
             name: 'HwRegCache',
+            level: CONFIG.LOCAL_GBLOGGER_LEVEL,
         });
     }
 

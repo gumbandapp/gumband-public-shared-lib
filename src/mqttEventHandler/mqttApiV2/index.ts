@@ -1,6 +1,7 @@
 export * from './packetParser';
 import EventEmitter from 'events';
 import { isNativeError } from 'util/types';
+import CONFIG from '../../config';
 import { IHardwareRegistrationCache } from '../../hardwareRegistrationCache';
 import {
     AnySource,
@@ -166,7 +167,7 @@ export class MqttApiV2 extends EventEmitter { // eslint-disable-line @typescript
         this.registrationTimeouts = { 'app': {}, 'system': {} };
         this.cache = cache;
         this.packetParser = new V2PacketParser();
-        this.logger = new GbLogger({ name: 'MqttApiV2' });
+        this.logger = new GbLogger({ name: 'MqttApiV2', level: CONFIG.LOCAL_GBLOGGER_LEVEL });
     }
 
     /**
