@@ -6,6 +6,7 @@ import mqtt from 'mqtt';
 import { isNativeError } from 'util/types';
 import { IHardwareRegistrationCache } from '../hardwareRegistrationCache';
 import { ApiVersion, MQTTInitialRegistrationTopic, V2ApiTopic, V2SystemInfoTopic, isMQTTInitialRegistrationTopic } from '../types';
+import { GbLogger } from '../utils/gbLogger';
 import { exhaustiveGuard } from '../utils/usefulTS';
 import { MqttApiV2 } from './mqttApiV2';
 
@@ -28,6 +29,7 @@ export class MQTTEventHandler extends EventEmitter {
     protected cache: IHardwareRegistrationCache;
     protected mqttV2Api: MqttApiV2;
     protected mqttClient: mqtt.MqttClient;
+    protected logger: GbLogger;
 
     /**
      * Default Constructor
@@ -39,6 +41,7 @@ export class MQTTEventHandler extends EventEmitter {
         this.cache = cache;
         this.mqttClient = mqttClient;
         this.mqttV2Api = new MqttApiV2(cache);
+        this.logger = new GbLogger({ name: 'MQTTEventHandler' });
     }
 
     /**
@@ -62,9 +65,9 @@ export class MQTTEventHandler extends EventEmitter {
             apiVersion = await this.cache.getMQTTAPIVersion(componentId);
         } catch (e) {
             const message = `Unable to get MQTT API Version from cache for componentId: ${componentId}`;
-            console.error(message);
-            console.error('Payload:', payload);
-            console.error('Error:', e);
+            this.logger.error(message);
+            this.logger.error(`Payload: ${JSON.stringify(payload)}`);
+            this.logger.error(`Error: ${e}`);
             return;
         }
 
@@ -78,7 +81,7 @@ export class MQTTEventHandler extends EventEmitter {
                 await this.mqttV2Api.onMessage(componentId, topic as V2ApiTopic, payload);
                 return;
             default:
-                console.warn(`Unrecognized MQTT API Version (${apiVersion}) for componentId: ${componentId}`);
+                this.logger.warn(`Unrecognized MQTT API Version (${apiVersion}) for componentId: ${componentId}`);
         }
     }
 
@@ -93,7 +96,7 @@ export class MQTTEventHandler extends EventEmitter {
      * @param {object} payload - The incoming hardware data
      */
     private async getApiVersionFromRegistrationTopic (_componentId: string, topic: MQTTInitialRegistrationTopic, payload: Buffer): Promise<ApiVersion | undefined> {
-        console.debug('baseMqttPacketHandler.registerSystem()');
+        this.logger.debug('baseMqttPacketHandler.registerSystem()');
         switch (topic) {
             case V2SystemInfoTopic:
             {
@@ -103,13 +106,13 @@ export class MQTTEventHandler extends EventEmitter {
                     jsonPayload = JSON.parse(decodedPayload);
                 } catch (e) {
                     const message = `Payload could not be JSON parsed: ${payload}`;
-                    console.error(message);
+                    this.logger.error(message);
                     if (isNativeError(e)) {
-                        console.error(e.message);
+                        this.logger.error(e.message);
                     }
                     throw new Error(message);
                 }
-                console.debug(`Received ${topic}:`, jsonPayload);
+                this.logger.debug(`Received ${topic}: ${JSON.stringify(jsonPayload)}`);
                 return jsonPayload?.api_ver;
             }
             default:
