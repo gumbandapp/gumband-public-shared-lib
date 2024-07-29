@@ -42,6 +42,7 @@ export class GbLogger {
 
         // Check that TZ is one that moment-timezone can handle
         if (!moment.tz.names().includes(tz)) {
+            // eslint-disable-next-line no-console -- This is a logger, so console is fine
             console.error(`Invalid timezone: ${tz}, see: https://github.com/moment/moment-timezone/blob/develop/data/packed/latest.json for valid values`);
         }
 
