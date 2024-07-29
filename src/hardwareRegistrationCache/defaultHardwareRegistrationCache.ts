@@ -1,5 +1,6 @@
 import EventEmitter from 'events';
-import type { AnySource, ApiVersion, ApplicationInfo, AppRegistration, SystemInfo, SystemRegistration, HardwareRegistration, PropertyRegistration } from '../types/mqtt-api';
+import type { AnySource, ApiVersion, ApplicationInfo, AppRegistration, HardwareRegistration, PropertyRegistration, SystemInfo, SystemRegistration } from '../types/mqtt-api';
+import { GbLogger } from '../utils/gbLogger';
 import { IHardwareRegistrationCache } from './IHardwareRegistrationCache';
 
 type PartialAppRegistration = Partial<AppRegistration> & Pick<AppRegistration, 'properties'>;
@@ -36,6 +37,7 @@ export class HardwareRegistrationCache extends EventEmitter implements IHardware
     logHashOnChange: boolean;
     locks: undefined;
     protected registrationHash: RegistrationHash;
+    protected logger: GbLogger;
 
     /**
      * HardwareRegistrationCache constructor
@@ -47,6 +49,9 @@ export class HardwareRegistrationCache extends EventEmitter implements IHardware
         this.logHashOnChange = logHashOnChange;
         this.ready = true;
         this.emit('ready');
+        this.logger = new GbLogger({
+            name: 'HwRegCache',
+        });
     }
 
     /**
@@ -293,8 +298,8 @@ export class HardwareRegistrationCache extends EventEmitter implements IHardware
      */
     logRegistrationHash (): void {
         if (this.logHashOnChange) {
-            console.debug('In memory registration cache:');
-            console.debug(JSON.stringify(this.registrationHash, null, 2));
+            this.logger.debug('In memory registration cache:');
+            this.logger.debug(JSON.stringify(this.registrationHash, null, 2));
         }
     }
 }
