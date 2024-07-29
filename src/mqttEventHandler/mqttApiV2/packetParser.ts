@@ -32,8 +32,6 @@ export class V2PacketParser {
 
     /**
      * A class to assist in the parsing of MQTT API V2 packets
-     * @param {object} opts - Options for the logger
-     * @param {string} opts.level - The default log level for this logger, see
      */
     constructor () {
         this.logger = new GbLogger({
