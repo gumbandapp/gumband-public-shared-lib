@@ -280,6 +280,12 @@ export class MqttApiV2 extends EventEmitter { // eslint-disable-line @typescript
             await lockRegistrationCacheAndPerformAction(this.cache, new Set(['system']), componentId, async () => {
                 await this.cache.cacheMQTTAPIVersion(componentId, systemInfo.api_ver);
                 await this.cache.cacheSystemInfo(componentId, systemInfo);
+
+                if (systemInfo.num_props === 0) {
+                    await this.completeSuccessfulRegistration(componentId, 'system');
+                } else {
+                    this.setRegistrationTimeoutForComponentIdAndSource(componentId, 'system');
+                }
             });
         } catch (e) {
             const message = `Failed to cache system info registration for componentId: ${componentId}`;
@@ -296,8 +302,6 @@ export class MqttApiV2 extends EventEmitter { // eslint-disable-line @typescript
             //   - Create a developer log?
             //   - Re-request system info from hardware?
         }
-
-        this.setRegistrationTimeoutForComponentIdAndSource(componentId, 'system');
     }
 
     /**
@@ -358,8 +362,11 @@ export class MqttApiV2 extends EventEmitter { // eslint-disable-line @typescript
                     throw new Error(message);
                 }
 
-
-                this.setRegistrationTimeoutForComponentIdAndSource(componentId, 'app');
+                if (appInfo.num_props === 0) {
+                    await this.completeSuccessfulRegistration(componentId, 'app');
+                } else {
+                    this.setRegistrationTimeoutForComponentIdAndSource(componentId, 'app');
+                }
             });
         } catch (e) {
             console.error(e);
@@ -462,12 +469,67 @@ export class MqttApiV2 extends EventEmitter { // eslint-disable-line @typescript
                     return;
                 }
 
-                this.setRegistrationTimeoutForComponentIdAndSource(componentId, source);
+                let sourceInfo: ApplicationInfo | SystemInfo | undefined;
+                try {
+                    switch (source) {
+                        case 'system':
+                            sourceInfo = await this.cache.getSystemInfo(componentId);
+                            break;
+                        case 'app':
+                            sourceInfo = await this.cache.getApplicationInfo(componentId);
+                            break;
+                        default:
+                            sourceInfo = exhaustiveGuard(source);
+                            break;
+                    }
+                } catch (e) {
+                    const message = `Unable to get ${source} from the cache`;
+                    console.error(message);
+                    if (isNativeError(e)) {
+                        console.debug(e.message);
+                    } else {
+                        console.debug(e);
+                    }
+                    throw new Error(message);
+                }
+
+                // Check if registration is complete
+                if (sourceInfo?.num_props === registeredProps.length + 1) {
+                    clearTimeout(this.registrationTimeouts[source][componentId]);
+                    await this.completeSuccessfulRegistration(componentId, source);
+                }
             });
         } catch (e) {
             console.error(e);
         }
     }
+
+    /**
+     * Helper method that updates the cache and emits 'true' for the registration event for the specified componentId and source
+     *
+     * @param {string} componentId - parsed componentId
+     * @param {V2Source} source - the source of the message. For example, system or app
+     * @return {void}
+     */
+    private async completeSuccessfulRegistration (componentId: string, source: V2Source) {
+        console.log(`${source} Registered!`);
+        try {
+            await this.cache.setRegistered(componentId, source, true);
+        } catch (e) {
+            const message = `[Critical] Failed to set ${source} isRegistered to true in the cache`;
+            console.error(message);
+            if (isNativeError(e)) {
+                console.debug(e.message);
+            } else {
+                console.debug(e);
+            }
+            throw new Error(message);
+        }
+
+        this.emitRegistrationEvent(componentId, source, true);
+    }
+
+
     /**
      * Handles a log published by hardware
      *
@@ -589,7 +651,7 @@ export class MqttApiV2 extends EventEmitter { // eslint-disable-line @typescript
 
         this.registrationTimeouts[source][componentId] = setTimeout(() => {
             try {
-                this.checkRegistrationForComponentIdAndSource(componentId, source);
+                this.handleRegistrationTimeout(componentId, source);
             } catch (e) {
                 console.error('Error occurred while evaluating application registration');
                 if (isNativeError(e)) {
@@ -602,14 +664,14 @@ export class MqttApiV2 extends EventEmitter { // eslint-disable-line @typescript
     }
 
     /**
-     * Method called to determine if application registration process is complete
+     * Method called to determine if application registration process is timed out registering
      *
      * @param {string} componentId - parsed componentId
      * @param {V2Source} source - the source of the message. For example, system or app
      * @return {Promise<void>} - true is application registration completed successfully
      * @fires MqttApiV2#ApplicationRegistration
      */
-    async checkRegistrationForComponentIdAndSource (componentId: string, source: AnySource): Promise<void> {
+    async handleRegistrationTimeout (componentId: string, source: AnySource): Promise<void> {
         try {
             await lockRegistrationCacheAndPerformAction(this.cache, new Set([source]), componentId, async () => {
                 try {
@@ -670,26 +732,9 @@ export class MqttApiV2 extends EventEmitter { // eslint-disable-line @typescript
                 }
 
                 if (
-                    (registeredProperties && expectNumberOfProps === registeredProperties.length) ||
-                    (!registeredProperties && expectNumberOfProps === 0)
+                    (registeredProperties && expectNumberOfProps !== registeredProperties.length) ||
+                    (!registeredProperties && expectNumberOfProps !== 0)
                 ) {
-                    // The application registration is complete!
-                    console.log(`${source} Registered!`);
-                    try {
-                        await this.cache.setRegistered(componentId, source, true);
-                    } catch (e) {
-                        const message = `[Critical] Failed to set ${source} isRegistered to true in the cache`;
-                        console.error(message);
-                        if (isNativeError(e)) {
-                            console.debug(e.message);
-                        } else {
-                            console.debug(e);
-                        }
-                        throw new Error(message);
-                    }
-
-                    this.emitRegistrationEvent(componentId, source, true);
-                } else {
                     // Only emit the not registered event if the timeout occurs
                     this.emitRegistrationEvent(componentId, source, false);
                 }
