@@ -11,5 +11,6 @@ fi
 
 # Run the tests, if it fails, log some output but don't fail the commit
 npm run lint
+npm run test 
 
 echo "Husky Pre-Push hooks completed"
