@@ -511,7 +511,7 @@ export class MqttApiV2 extends EventEmitter { // eslint-disable-line @typescript
      * @param {V2Source} source - the source of the message. For example, system or app
      * @return {void}
      */
-    private async completeSuccessfulRegistration (componentId: string, source: V2Source) {
+    private async completeSuccessfulRegistration (componentId: string, source: V2Source): Promise<void> {
         console.log(`${source} Registered!`);
         try {
             await this.cache.setRegistered(componentId, source, true);
