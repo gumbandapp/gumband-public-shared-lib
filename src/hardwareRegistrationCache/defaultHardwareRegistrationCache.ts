@@ -1,5 +1,4 @@
 import EventEmitter from 'events';
-import CONFIG from '../config';
 import type { AnySource, ApiVersion, ApplicationInfo, AppRegistration, HardwareRegistration, PropertyRegistration, SystemInfo, SystemRegistration } from '../types/mqtt-api';
 import { GbLogger } from '../utils/gbLogger';
 import { IHardwareRegistrationCache } from './IHardwareRegistrationCache';
@@ -42,17 +41,15 @@ export class HardwareRegistrationCache extends EventEmitter implements IHardware
     /**
      * HardwareRegistrationCache constructor
      * @param {boolean} [logHashOnChange=false] - if true, this class will print debug logs with the console of the full cache on every change
+     * @param {GbLogger} logger - a logger instance to use for logging
      */
-    constructor (logHashOnChange: boolean = false) {
+    constructor (logHashOnChange: boolean = false, logger: GbLogger) {
         super();
         this.registrationHash = {};
         this.logHashOnChange = logHashOnChange;
         this.ready = true;
         this.emit('ready');
-        this.logger = new GbLogger({
-            name: 'HwRegCache',
-            level: CONFIG.LOCAL_GBLOGGER_LEVEL,
-        });
+        this.logger = logger;
     }
 
     /**

@@ -1,4 +1,3 @@
-import CONFIG from '../../config';
 import { GbLogger } from './../../utils/gbLogger';
 
 import { isNativeError } from 'util/types';
@@ -32,13 +31,10 @@ export class V2PacketParser {
 
     /**
      * A class to assist in the parsing of MQTT API V2 packets
+     * @param {GbLogger} logger - The logger instance
      */
-    constructor () {
-        this.logger = new GbLogger({
-            name: 'MqttParser',
-            // Include the log level from the constructor args, or default if none are provided
-            level: CONFIG.LOCAL_GBLOGGER_LEVEL,
-        });
+    constructor (logger: GbLogger) {
+        this.logger = logger;
     }
     /**
      * This function attempts to decode a Buffer payload into a V2 system info payload.

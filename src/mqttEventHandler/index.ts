@@ -4,7 +4,6 @@ export * from './mqttApiV2';
 import EventEmitter from 'events';
 import mqtt from 'mqtt';
 import { isNativeError } from 'util/types';
-import CONFIG from '../config';
 import { IHardwareRegistrationCache } from '../hardwareRegistrationCache';
 import { ApiVersion, MQTTInitialRegistrationTopic, V2ApiTopic, V2SystemInfoTopic, isMQTTInitialRegistrationTopic } from '../types';
 import { GbLogger } from '../utils/gbLogger';
@@ -36,13 +35,14 @@ export class MQTTEventHandler extends EventEmitter {
      * Default Constructor
      * @param {IHardwareRegistrationCache} cache - Injected implementation of the IHardwareRegistrationCache interface
      * @param {mqtt.MqttClient} mqttClient - the mqtt client (used to publish messages back to the hardware)
+     * @param {GbLogger} logger - the logger instance
      */
-    constructor (cache: IHardwareRegistrationCache, mqttClient: mqtt.MqttClient) {
+    constructor (cache: IHardwareRegistrationCache, mqttClient: mqtt.MqttClient, logger: GbLogger) {
         super();
         this.cache = cache;
         this.mqttClient = mqttClient;
-        this.mqttV2Api = new MqttApiV2(cache);
-        this.logger = new GbLogger({ name: 'MQTTEventHandler', level: CONFIG.LOCAL_GBLOGGER_LEVEL });
+        this.logger = logger;
+        this.mqttV2Api = new MqttApiV2(cache, this.logger);
     }
 
     /**
