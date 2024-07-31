@@ -17,7 +17,7 @@ import {
     V2SystemInfo,
     V2UnpackedPropertyValue,
 } from '../../types';
-import { GbLogger } from '../../utils/gbLogger';
+import { LoggerInterface } from '../../utils/gbLogger';
 import { exhaustiveGuard } from '../../utils/usefulTS';
 import { lockRegistrationCacheAndPerformAction } from '../common';
 import { V2PacketParser } from './packetParser';
@@ -155,14 +155,14 @@ export class MqttApiV2 extends EventEmitter { // eslint-disable-line @typescript
     registrationTimeouts: Record<V2Source, Record<string, NodeJS.Timeout>>;
     cache: IHardwareRegistrationCache;
     packetParser: V2PacketParser;
-    protected logger: GbLogger;
+    protected logger: LoggerInterface;
 
     /**
      * Default Constructor
      * @param {IHardwareRegistrationCache} cache - Implementation of the IHardwareRegistrationCache interface
-     * @param {GbLogger} logger - the logger instance
+     * @param {LoggerInterface} logger - the logger instance
      */
-    constructor (cache: IHardwareRegistrationCache, logger: GbLogger) {
+    constructor (cache: IHardwareRegistrationCache, logger: LoggerInterface) {
         super();
         this.registrationTimeouts = { 'app': {}, 'system': {} };
         this.cache = cache;

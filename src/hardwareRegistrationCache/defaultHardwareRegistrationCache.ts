@@ -1,6 +1,6 @@
 import EventEmitter from 'events';
 import type { AnySource, ApiVersion, ApplicationInfo, AppRegistration, HardwareRegistration, PropertyRegistration, SystemInfo, SystemRegistration } from '../types/mqtt-api';
-import { GbLogger } from '../utils/gbLogger';
+import { LoggerInterface } from '../utils/gbLogger';
 import { IHardwareRegistrationCache } from './IHardwareRegistrationCache';
 type PartialAppRegistration = Partial<AppRegistration> & Pick<AppRegistration, 'properties'>;
 type PartialSystemRegistration = Partial<SystemRegistration> & Pick<SystemRegistration, 'properties'>;
@@ -36,14 +36,14 @@ export class HardwareRegistrationCache extends EventEmitter implements IHardware
     logHashOnChange: boolean;
     locks: undefined;
     protected registrationHash: RegistrationHash;
-    protected logger: GbLogger;
+    logger: LoggerInterface;
 
     /**
      * HardwareRegistrationCache constructor
      * @param {boolean} [logHashOnChange=false] - if true, this class will print debug logs with the console of the full cache on every change
      * @param {GbLogger} logger - a logger instance to use for logging
      */
-    constructor (logHashOnChange: boolean = false, logger: GbLogger) {
+    constructor (logHashOnChange: boolean = false, logger: LoggerInterface) {
         super();
         this.registrationHash = {};
         this.logHashOnChange = logHashOnChange;
@@ -296,8 +296,8 @@ export class HardwareRegistrationCache extends EventEmitter implements IHardware
      */
     logRegistrationHash (): void {
         if (this.logHashOnChange) {
-            this.logger.debug('In memory registration cache:');
-            this.logger.debug(JSON.stringify(this.registrationHash));
+            // this.logger.debug('In memory registration cache:');
+            // this.logger.debug(JSON.stringify(this.registrationHash));
         }
     }
 }

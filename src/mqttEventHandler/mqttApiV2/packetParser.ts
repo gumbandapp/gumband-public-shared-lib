@@ -1,4 +1,4 @@
-import { GbLogger } from './../../utils/gbLogger';
+import { LoggerInterface } from './../../utils/gbLogger';
 
 import { isNativeError } from 'util/types';
 
@@ -27,13 +27,13 @@ const INVALID_PROPERTY_PATH_CHARS = /[^\x20-\x22\x25-\x2A\x2C-\x7E]/; // Negated
  * This class will contains validation methods for the MQTT API Version 2
  */
 export class V2PacketParser {
-    protected logger: GbLogger;
+    protected logger: LoggerInterface;
 
     /**
      * A class to assist in the parsing of MQTT API V2 packets
-     * @param {GbLogger} logger - The logger instance
+     * @param {LoggerInterface} logger - The logger instance
      */
-    constructor (logger: GbLogger) {
+    constructor (logger: LoggerInterface) {
         this.logger = logger;
     }
     /**

@@ -16,10 +16,20 @@ export type GbLoggerConstructorObjectOpts = {
     tz?: string; // A timezone string, when omitted timestamps will be UTC
 };
 
+
+export interface LoggerInterface {
+    error: (message: any) => void;
+    warn: (message: any) => void;
+    info: (message: any) => void;
+    http: (message: any) => void;
+    verbose: (message: any) => void;
+    debug: (message: any) => void;
+    silly: (message: any) => void;
+}
 /**
  * A logger class that wraps winston
  */
-export class GbLogger {
+export class GbLogger implements LoggerInterface {
     private logger: WinstonLogger;
 
     /**
