@@ -158,5 +158,3 @@ pipelines:
          trigger: manual
     hotfix/*:
       - step: *code-quality
-
-
