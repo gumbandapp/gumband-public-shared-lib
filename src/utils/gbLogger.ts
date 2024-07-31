@@ -2,7 +2,7 @@
 import moment from 'moment-timezone';
 import winston, { Logger as WinstonLogger, transports as WinstonTransports } from 'winston';
 
-type VariousWinstonTransportInstancesArray = (
+export type VariousWinstonTransportInstancesArray = (
     WinstonTransports.ConsoleTransportInstance |
     WinstonTransports.FileTransportInstance |
     WinstonTransports.HttpTransportInstance |
