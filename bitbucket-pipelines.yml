@@ -36,9 +36,14 @@ definitions:
           - npm run build
           # Replace any "/" in the branchname with an "_" to prevent naming issues, save to BITBUCKET_BRANCH_CLEAN
           - export BITBUCKET_BRANCH_CLEAN=$(echo $BITBUCKET_BRANCH | sed 's/\//-/g')
+          - OLD_VERSION=$(cat package.json | jq -r .version)
+          - echo "Old version --> $OLD_VERSION"
           - npm --no-git-tag-version version prerelease --preid=alpha-${BITBUCKET_BRANCH_CLEAN}
+          - TEMP_NEW_VERSION=$(cat package.json | jq -r .version)
+          - echo "Temp new version --> $TEMP_NEW_VERSION"
           - git add package.json package-lock.json
           - NEW_VERSION=$(node -p "require('./package.json').version")
+          - echo "New version --> $NEW_VERSION"
           - git commit -m "Release ALPHA version $NEW_VERSION [skip ci]"  # v important to have the skip ci so we don't create a recursive build loop
           - git tag -am "Release ALPHA version $NEW_VERSION" "$NEW_VERSION" 
           # Remove the old beta tag
@@ -83,7 +88,7 @@ definitions:
         name: Publish to NPM (release candidate)
         image: *image-node-18
         script:
-          - apt-get update && apt-get install git software-properties-common build-essential -y
+          - apt-get update && apt-get install git software-properties-common build-essential -y jq
           - echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > .npmrc
           - mkdir -p ~/.ssh
           - echo $SSH_KEY | base64 --decode > ~/.ssh/id_rsa # pull in our key that lets us do the next step
@@ -153,3 +158,5 @@ pipelines:
          trigger: manual
     hotfix/*:
       - step: *code-quality
+
+
