@@ -1,4 +1,5 @@
-echo "Running Husky Pre-Push hooks"
+echo "Running Husky Pre-Push hooks: lint, build, test"
+echo "To skip this hook, use --no-verify"
 # A variable to hold exit code of the tests
 
 # Ensure the user is not committing to a branch named "main" or "master"
@@ -11,6 +12,7 @@ fi
 
 # Run the tests, if it fails, log some output but don't fail the commit
 npm run lint
+npm run build
 npm run test 
 
 echo "Husky Pre-Push hooks completed"
