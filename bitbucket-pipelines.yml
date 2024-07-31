@@ -27,7 +27,7 @@ definitions:
         name: Publish to NPM (alpha release)
         image: node:lts-slim
         script:
-          - apt-get update && apt-get install git software-properties-common build-essential -y tree -y
+          - apt-get update && apt-get install git software-properties-common build-essential -y tree -y jq
           - echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > .npmrc
           - mkdir -p ~/.ssh
           - echo $SSH_KEY | base64 --decode > ~/.ssh/id_rsa # pull in our key that lets us do the next step
@@ -88,7 +88,7 @@ definitions:
         name: Publish to NPM (release candidate)
         image: *image-node-18
         script:
-          - apt-get update && apt-get install git software-properties-common build-essential -y jq
+          - apt-get update && apt-get install git software-properties-common build-essential -y
           - echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > .npmrc
           - mkdir -p ~/.ssh
           - echo $SSH_KEY | base64 --decode > ~/.ssh/id_rsa # pull in our key that lets us do the next step
