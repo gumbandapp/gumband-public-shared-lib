@@ -41,7 +41,7 @@ export class HardwareRegistrationCache extends EventEmitter implements IHardware
     /**
      * HardwareRegistrationCache constructor
      * @param {boolean} [logHashOnChange=false] - if true, this class will print debug logs with the console of the full cache on every change
-     * @param {GbLogger} logger - a logger instance to use for logging
+     * @param {LoggerInterface} logger - a logger instance to use for logging
      */
     constructor (logHashOnChange: boolean = false, logger: LoggerInterface) {
         super();
