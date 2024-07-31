@@ -35,15 +35,42 @@ definitions:
           - npm ci
           - npm run build
           # Replace any "/" in the branchname with an "_" to prevent naming issues, save to BITBUCKET_BRANCH_CLEAN
+          # Fetch all tags from the remote repository
+          - git fetch --tags
+
+          # Replace any "/" in the branchname with an "_" to prevent naming issues, save to BITBUCKET_BRANCH_CLEAN
           - export BITBUCKET_BRANCH_CLEAN=$(echo $BITBUCKET_BRANCH | sed 's/\//-/g')
-          - npm --no-git-tag-version version prerelease --preid=alpha-${BITBUCKET_BRANCH_CLEAN}
+
+          # Get the base version without the incremental suffix
+          - BASE_VERSION=$(npm --no-git-tag-version version prerelease --preid=alpha-${BITBUCKET_BRANCH_CLEAN} --json | jq -r .version)
+
+          # Extract the numeric part of the version
+          - BASE_VERSION_NUMBER=$(echo $BASE_VERSION | sed 's/.*\.\([0-9]\+\)$/\1/')
+
+          # Find the highest existing incremental version
+          - HIGHEST_VERSION=$(git tag -l "${BASE_VERSION}*" | sed 's/.*\.\([0-9]\+\)$/\1/' | sort -n | tail -n 1)
+
+          # Increment the version number
+          - if [ -z "$HIGHEST_VERSION" ]; then NEW_VERSION="${BASE_VERSION}.0"; else NEW_VERSION="${BASE_VERSION}.$((HIGHEST_VERSION + 1))"; fi
+
+          # Update the package.json version
+          - npm version $NEW_VERSION --no-git-tag-version
+
+          # Add the updated package.json and package-lock.json
           - git add package.json package-lock.json
-          - NEW_VERSION=$(node -p "require('./package.json').version")
-          - git commit -m "Release ALPHA version $NEW_VERSION [skip ci]"  # v important to have the skip ci so we don't create a recursive build loop
-          - git tag -am "Release ALPHA version $NEW_VERSION" "$NEW_VERSION" 
-          # Remove the old beta tag
-          - git tag -d alpha || true  
-          - git push origin :refs/tags/alpha || true 
+
+          # Commit the changes
+          - git commit -m "Release ALPHA version $NEW_VERSION [skip ci]"
+
+          # Tag the new version
+          - git tag -am "Release ALPHA version $NEW_VERSION" "$NEW_VERSION"
+
+          # Remove the old alpha tag
+          - git tag -d alpha || true
+
+          # Push the new tag to the remote repository
+          - git push origin :refs/tags/alpha || true
+
           - pipe: atlassian/npm-publish:0.3.0
             variables:
               EXTRA_ARGS: '--tag alpha-${BITBUCKET_BRANCH_CLEAN}'
