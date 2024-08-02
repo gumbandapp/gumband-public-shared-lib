@@ -17,3 +17,13 @@ export const exhaustiveGuard = (_: never, errorMessage?: string): never => {
 export const isNonEmptyString = (unknownString: unknown): unknownString is string => {
     return typeof unknownString === 'string' && unknownString !== '';
 };
+
+/**
+ *  Async wait
+ * @param {number} ms  - ms to wait
+ */
+export const waitMs = async (ms: number) => {
+    return new Promise<void>((resolve) => setTimeout(() => {
+        resolve();
+    }, ms));
+};

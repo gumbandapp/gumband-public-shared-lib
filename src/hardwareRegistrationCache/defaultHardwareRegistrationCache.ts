@@ -1,6 +1,7 @@
 import EventEmitter from 'events';
 import type { AnySource, ApiVersion, ApplicationInfo, AppRegistration, SystemInfo, SystemRegistration, HardwareRegistration, PropertyRegistration } from '../types/mqtt-api';
 import { ICacheLockByComponentId, IHardwareRegistrationCache } from './IHardwareRegistrationCache';
+import { waitMs } from '../utils';
 
 type PartialAppRegistration = Partial<AppRegistration> & Pick<AppRegistration, 'properties'>;
 type PartialSystemRegistration = Partial<SystemRegistration> & Pick<SystemRegistration, 'properties'>;
@@ -11,17 +12,6 @@ type PartialHardwareManifest = Partial<Omit<HardwareRegistration, 'app' | 'syste
 }
 
 type RegistrationHash = Record<string, PartialHardwareManifest>;
-
-/**
- *  Async wait
- * @param {number} ms  - ms to wait
- */
-async function waitMs (ms: number) {
-    return new Promise<void>((resolve) => setTimeout(() => {
-        resolve();
-    }, ms));
-}
-
 
 /**
  * Very basic locking mechanism with timeout support
