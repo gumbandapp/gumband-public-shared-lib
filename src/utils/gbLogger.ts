@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import moment from 'moment-timezone';
 import winston, { Logger as WinstonLogger, transports as WinstonTransports } from 'winston';
+import { type LogLevelType, LOG_LEVELS } from '../constants/LogLevels';
 
 export type VariousWinstonTransportInstancesArray = (
     WinstonTransports.ConsoleTransportInstance |
@@ -10,7 +11,7 @@ export type VariousWinstonTransportInstancesArray = (
 
 export type GbLoggerConstructorObjectOpts = {
     hideUtc?: boolean
-    level?: string;
+    level?: LogLevelType;
     name?: string;
     transports?: VariousWinstonTransportInstancesArray;
     tz?: string; // A timezone string, when omitted timestamps will be UTC
@@ -45,7 +46,7 @@ export class GbLogger implements LoggerInterface {
         // Create a default console transport
 
         const hideUtc = opts?.hideUtc || false;
-        const level = opts?.level || 'info';
+        const level = opts?.level || LOG_LEVELS.INFO;
         const name = opts?.name || '';
         const transports = opts?.transports || [];
         const tz = opts?.tz || 'UTC';
