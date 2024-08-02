@@ -488,11 +488,11 @@ export class MqttApiV2 extends EventEmitter { // eslint-disable-line @typescript
                     }
                 } catch (e) {
                     const message = `Unable to get ${source} from the cache`;
-                    console.error(message);
+                    this.logger.error(message);
                     if (isNativeError(e)) {
-                        console.debug(e.message);
+                        this.logger.debug(e.message);
                     } else {
-                        console.debug(e);
+                        this.logger.debug(e);
                     }
                     throw new Error(message);
                 }
@@ -516,16 +516,16 @@ export class MqttApiV2 extends EventEmitter { // eslint-disable-line @typescript
      * @return {void}
      */
     private async completeSuccessfulRegistration (componentId: string, source: V2Source): Promise<void> {
-        console.log(`${source} Registered!`);
+        this.logger.info(`${source} Registered!`);
         try {
             await this.cache.setRegistered(componentId, source, true);
         } catch (e) {
             const message = `[Critical] Failed to set ${source} isRegistered to true in the cache`;
-            console.error(message);
+            this.logger.error(message);
             if (isNativeError(e)) {
-                console.debug(e.message);
+                this.logger.debug(e.message);
             } else {
-                console.debug(e);
+                this.logger.debug(e);
             }
             throw new Error(message);
         }
