@@ -1,6 +1,6 @@
 import EventEmitter from 'events';
 import type { AnySource, ApiVersion, ApplicationInfo, AppRegistration, SystemInfo, SystemRegistration, HardwareRegistration, PropertyRegistration } from '../types/mqtt-api';
-import { IHardwareRegistrationCache } from './IHardwareRegistrationCache';
+import { ICacheLockByComponentId, IHardwareRegistrationCache } from './IHardwareRegistrationCache';
 
 type PartialAppRegistration = Partial<AppRegistration> & Pick<AppRegistration, 'properties'>;
 type PartialSystemRegistration = Partial<SystemRegistration> & Pick<SystemRegistration, 'properties'>;
@@ -11,6 +11,73 @@ type PartialHardwareManifest = Partial<Omit<HardwareRegistration, 'app' | 'syste
 }
 
 type RegistrationHash = Record<string, PartialHardwareManifest>;
+
+/**
+ *  Async wait
+ * @param {number} ms  - ms to wait
+ */
+async function waitMs (ms: number) {
+    return new Promise<void>((resolve) => setTimeout(() => {
+        resolve();
+    }, ms));
+}
+
+
+/**
+ * Very basic locking mechanism with timeout support
+ */
+export class DefaultCacheLock implements ICacheLockByComponentId {
+    private heldLocks: Set<string>;
+    private timeouts: Map<string, ReturnType<typeof setTimeout>>;
+
+    /**
+     * Constructor
+     *
+     * Initializes internal data
+     */
+    constructor () {
+        this.heldLocks = new Set<string>();
+        this.timeouts = new Map<string, ReturnType<typeof setTimeout>>();
+    }
+
+    /**
+     * Lock method for a specific area in the cache for a given componentId.
+     *
+     * This method should prevent other instances of the listener from to writing to and reading from the
+     * cache for the specified componentId.
+     *
+     * If the lock is not available, this method should delay its return until the lock is acquired or throw an error.
+     * @param {string} componentId - the parsed componentId from the event topic
+     * @param {number} [timeoutMS] - optional automatic timeout (in ms) for the lock
+     * @throws {Error} - errors if lock fails to be acquired
+     */
+    async lock (componentId: string, timeoutMS?: number): Promise<void> {
+        // Check every 100ms
+        while (this.heldLocks.has(componentId)) {
+            await waitMs(100);
+        }
+
+        this.heldLocks.add(componentId);
+
+        if (timeoutMS !== undefined) {
+            this.timeouts.set(componentId, setTimeout(() => {
+                this.heldLocks.delete(componentId);
+            }, timeoutMS));
+        }
+    }
+
+    /**
+     * Unlock method for a specific area in the cache for a given componentId.
+     *
+     * This method should release the system registration lock for the componentId if it exists.
+     * @param {string} componentId - the parsed componentId from the event topic
+     * @throws {Error} - errors if lock fails to be released
+     */
+    async unlock (componentId: string): Promise<void> {
+        clearTimeout(this.timeouts.get(componentId));
+        this.heldLocks.delete(componentId);
+    }
+}
 
 /**
  * RedisHardwareRegistrationCache Class
@@ -34,7 +101,7 @@ type RegistrationHash = Record<string, PartialHardwareManifest>;
 export class HardwareRegistrationCache extends EventEmitter implements IHardwareRegistrationCache {
     ready: boolean;
     logHashOnChange: boolean;
-    locks: undefined;
+    locks: {'system': DefaultCacheLock, 'app': DefaultCacheLock};
     protected registrationHash: RegistrationHash;
 
     /**
@@ -43,6 +110,7 @@ export class HardwareRegistrationCache extends EventEmitter implements IHardware
      */
     constructor (logHashOnChange: boolean = false) {
         super();
+        this.locks = { 'system': new DefaultCacheLock(), 'app': new DefaultCacheLock() };
         this.registrationHash = {};
         this.logHashOnChange = logHashOnChange;
         this.ready = true;
