@@ -466,7 +466,7 @@ export class V2PacketParser {
      * @return {Promise<V2Log>}
      */
     async parseLog (payload: Buffer): Promise<V2Log> {
-        console.log('MqttApiV2Parser.parseProperty()');
+        console.log('MqttApiV2Parser.parseLog()');
         let jsonPayload;
         try {
             const decodedPayload = payload.toString('utf-8');
