@@ -4,7 +4,7 @@ export type ObjectValues<T> = T[keyof T];
 /**
  * Typescript exhaustive guard (See: https://www.google.com/search?q=typescript+exhaustive+guard)
  *
- * Functionally, this is a wrapper an error.
+ * Functionally, this is a wrapper for an error.
  * @param {never} _ - the enum that should be exhausted before this function is called
  * @param {string} errorMessage - [optional] error message if the application gets here at run time
  * @throws {Error}
@@ -19,7 +19,9 @@ export const isNonEmptyString = (unknownString: unknown): unknownString is strin
 };
 
 /**
- *  Async wait
+ * Async wait
+ *
+ * Basic asynchronous wait for a specified amount of milliseconds
  * @param {number} ms  - ms to wait
  */
 export const waitMs = async (ms: number) => {

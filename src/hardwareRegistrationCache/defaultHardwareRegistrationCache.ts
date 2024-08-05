@@ -15,6 +15,8 @@ type RegistrationHash = Record<string, PartialHardwareManifest>;
 
 /**
  * Very basic locking mechanism with timeout support
+ *
+ * Allows for exclusive access of resources and serializes cache actions.
  */
 export class DefaultCacheLock implements ICacheLockByComponentId {
     private heldLocks: Set<string>;
