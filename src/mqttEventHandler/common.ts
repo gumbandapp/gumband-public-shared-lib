@@ -47,7 +47,6 @@ export async function lockRegistrationCacheAndPerformAction<T> (cache: IHardware
             }),
         );
     } catch (e) {
-        console.error(e);
         // In this case, we should release the held locks before throwing an error.
         await releaseLocks();
         throw new Error(`Failed to acquire ${Array.from(locks).join(' registration lock and ')} registration lock for componentId: ${componentId}`);

@@ -18,9 +18,9 @@ describe('GbLogger', () => {
     });
 
     it('should throw an error for invalid timezone.', () => {
-        jest.spyOn(console, 'error').mockImplementation(() => {});
+        const consoleErrSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
         new GbLogger({ tz: 'Invalid/Timezone' });
-        expect(console.error).toHaveBeenCalled();
+        expect(consoleErrSpy).toHaveBeenCalled();
         jest.restoreAllMocks();
     });
 

@@ -1,8 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import moment from 'moment-timezone';
 import winston, { Logger as WinstonLogger, transports as WinstonTransports } from 'winston';
+import { type LogLevelType, LOG_LEVELS } from '../constants/LogLevels';
 
-type VariousWinstonTransportInstancesArray = (
+export type VariousWinstonTransportInstancesArray = (
     WinstonTransports.ConsoleTransportInstance |
     WinstonTransports.FileTransportInstance |
     WinstonTransports.HttpTransportInstance |
@@ -10,16 +11,26 @@ type VariousWinstonTransportInstancesArray = (
 
 export type GbLoggerConstructorObjectOpts = {
     hideUtc?: boolean
-    level?: string;
+    level?: LogLevelType;
     name?: string;
     transports?: VariousWinstonTransportInstancesArray;
     tz?: string; // A timezone string, when omitted timestamps will be UTC
 };
 
+
+export interface LoggerInterface {
+    error: (message: any) => void;
+    warn: (message: any) => void;
+    info: (message: any) => void;
+    http: (message: any) => void;
+    verbose: (message: any) => void;
+    debug: (message: any) => void;
+    silly: (message: any) => void;
+}
 /**
  * A logger class that wraps winston
  */
-export class GbLogger {
+export class GbLogger implements LoggerInterface {
     private logger: WinstonLogger;
 
     /**
@@ -35,13 +46,14 @@ export class GbLogger {
         // Create a default console transport
 
         const hideUtc = opts?.hideUtc || false;
-        const level = opts?.level || 'info';
+        const level = opts?.level || LOG_LEVELS.INFO;
         const name = opts?.name || '';
         const transports = opts?.transports || [];
         const tz = opts?.tz || 'UTC';
 
         // Check that TZ is one that moment-timezone can handle
         if (!moment.tz.names().includes(tz)) {
+            // eslint-disable-next-line no-console -- This is a logger, so console is fine
             console.error(`Invalid timezone: ${tz}, see: https://github.com/moment/moment-timezone/blob/develop/data/packed/latest.json for valid values`);
         }
 

@@ -1,7 +1,7 @@
 import EventEmitter from 'events';
-import type { AnySource, ApiVersion, ApplicationInfo, AppRegistration, SystemInfo, SystemRegistration, HardwareRegistration, PropertyRegistration } from '../types/mqtt-api';
+import type { AnySource, ApiVersion, ApplicationInfo, AppRegistration, HardwareRegistration, PropertyRegistration, SystemInfo, SystemRegistration } from '../types/mqtt-api';
+import { LoggerInterface } from '../utils/gbLogger';
 import { IHardwareRegistrationCache } from './IHardwareRegistrationCache';
-
 type PartialAppRegistration = Partial<AppRegistration> & Pick<AppRegistration, 'properties'>;
 type PartialSystemRegistration = Partial<SystemRegistration> & Pick<SystemRegistration, 'properties'>;
 
@@ -36,17 +36,20 @@ export class HardwareRegistrationCache extends EventEmitter implements IHardware
     logHashOnChange: boolean;
     locks: undefined;
     protected registrationHash: RegistrationHash;
+    logger: LoggerInterface;
 
     /**
      * HardwareRegistrationCache constructor
      * @param {boolean} [logHashOnChange=false] - if true, this class will print debug logs with the console of the full cache on every change
+     * @param {LoggerInterface} logger - a logger instance to use for logging
      */
-    constructor (logHashOnChange: boolean = false) {
+    constructor (logHashOnChange: boolean = false, logger: LoggerInterface) {
         super();
         this.registrationHash = {};
         this.logHashOnChange = logHashOnChange;
         this.ready = true;
         this.emit('ready');
+        this.logger = logger;
     }
 
     /**
@@ -293,8 +296,8 @@ export class HardwareRegistrationCache extends EventEmitter implements IHardware
      */
     logRegistrationHash (): void {
         if (this.logHashOnChange) {
-            console.debug('In memory registration cache:');
-            console.debug(JSON.stringify(this.registrationHash, null, 2));
+            this.logger.debug('In memory registration cache:');
+            this.logger.debug(JSON.stringify(this.registrationHash));
         }
     }
 }
