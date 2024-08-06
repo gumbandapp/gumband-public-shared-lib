@@ -11,7 +11,7 @@ import type {
     UnsubscribeMultipleHardwarePayload,
 } from './authorizationAndSubscriptionEventPayloads';
 import type {
-    ComponentAddedPayload,
+    ComponentAddedToExhibitPayload,
     ComponentConnectedPayload,
     ComponentDisconnectedPayload,
     ComponentPropertyReceivedPayload,
@@ -43,7 +43,7 @@ export type SocketEventPayloadMap = {
     // Component Events
     EXHIBIT_OFFLINE: ExhibitOfflinePayload;
     EXHIBIT_ONLINE: ExhibitOnlinePayload;
-    COMPONENT_ADDED: ComponentAddedPayload;
+    COMPONENT_ADDED_TO_EXHIBIT: ComponentAddedToExhibitPayload;
     COMPONENT_CONNECTED: ComponentConnectedPayload;
     COMPONENT_DISCONNECTED: ComponentDisconnectedPayload;
     COMPONENT_PROPERTY_RECEIVED: ComponentPropertyReceivedPayload;
