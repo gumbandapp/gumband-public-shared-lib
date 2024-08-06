@@ -40,6 +40,13 @@ export const COMPONENT_TYPE = {
 
 export type ComponentType = ObjectValues<typeof COMPONENT_TYPE>;
 
+export type ComponentAddedPayload = {
+    exhibitId: number,
+    componentId: string | number; // uuid or number
+    category: ComponentCategory;
+    type: ComponentType;
+};
+
 export type ComponentConnectedPayload = {
     exhibitId: number,
     componentId: string | number; // uuid or number
