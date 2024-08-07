@@ -49,7 +49,7 @@ export class PropertyFormatError extends Error {
  * @param {string} componentId - the component to publish the update to
  * @param {AnySource} source - which source to publish the value to
  * @param {string} propertyPath - the name of the property to publish to
- * @param {FormattedProertyValue} values - the formatted value to publish to the hardware
+ * @param {FormattedPropertyValue} values - the formatted value to publish to the hardware
  * @param {MqttPublishFunc} mqttPublishFunc - mqtt publish function to use (could throw an error)
  */
 export const setPropertyValue = async (cache: IHardwareRegistrationCache, componentId: string, source: AnySource, propertyPath: string, values: FormattedPropertyValue, mqttPublishFunc: MqttPublishFunc) => {
