@@ -417,8 +417,9 @@ describe('jsonFormatPropertyValue', () => {
 });
 
 describe('unpackJsonPropertyValue', () => {
-    describe('when propertyRegistration.type is "gmbnd_primitive"', () => {
+    describe('when propertyRegistration is "gmbnd_primitive"', () => {
         let mockPropertyRegistration: V2PropertyRegistration;
+
         beforeEach(()=>{
             mockPropertyRegistration = {
                 path: '',
@@ -433,78 +434,129 @@ describe('unpackJsonPropertyValue', () => {
             };
         });
 
-        describe('when propertyRegistration is "gmbnd_primitive"', () => {
-            describe('when format is "s"', () => {
-                beforeEach(() => {
-                    mockPropertyRegistration.format = 's';
-                    mockPropertyRegistration.length = 100;
-                });
-
-                it('should return the first value wrapped in another array when the first element is a string', () => {
-                    const stubStringValue = 'stub-string';
-                    expect(testPacketParser.unpackJsonPropertyValue([stubStringValue], mockPropertyRegistration)).toEqual([[stubStringValue]]);
-                });
-
-                it('should ignore additional values in another array', () => {
-                    const stubStringValue = 'stub-string';
-                    expect(testPacketParser.unpackJsonPropertyValue([stubStringValue, 2, true, 'another-string'], mockPropertyRegistration)).toEqual([[stubStringValue]]);
-                });
-
-                it('should truncate string length to registered length if passed in value is too long', () => {
-                    const stubStringValue = 'stub-string';
-                    mockPropertyRegistration.length = 4;
-                    expect(testPacketParser.unpackJsonPropertyValue([stubStringValue], mockPropertyRegistration)).toEqual([[stubStringValue.substring(0, 4)]]);
-                });
+        describe('when format is "s"', () => {
+            beforeEach(() => {
+                mockPropertyRegistration.format = 's';
+                mockPropertyRegistration.length = 100;
             });
 
-            it('should wrap all primitive values in sub arrays', () => {
-                const stubPrimitiveValues = [1, 2, 3, 4];
+            it('should return the first value wrapped in another array when the first element is a string', () => {
+                const stubStringValue = 'stub-string';
+                expect(testPacketParser.unpackJsonPropertyValue([stubStringValue], mockPropertyRegistration)).toEqual([[stubStringValue]]);
+            });
+
+            it('should throw an error if there are other values in the array', () => {
+                const stubStringValue = 'stub-string';
+                expect(() => testPacketParser.unpackJsonPropertyValue([stubStringValue, 2, true, 'another-string'], mockPropertyRegistration)).toThrow(new Error('Too many data entries'));
+            });
+
+            it('should throw an error if the passed in string is longer than the registered max length', () => {
+                const stubStringValue = 'stub-string';
                 mockPropertyRegistration.length = 4;
-                expect(testPacketParser.unpackJsonPropertyValue(stubPrimitiveValues, mockPropertyRegistration)).toEqual([[1], [2], [3], [4]]);
+                expect(() => testPacketParser.unpackJsonPropertyValue([stubStringValue], mockPropertyRegistration)).toThrow(new Error('String length too long'));
             });
         });
 
-        describe('when propertyRegistration is "gmbnd_color"', () => {
-            beforeEach(() => {
-                mockPropertyRegistration.type = 'gmbnd_color';
-            });
+        it('should wrap all primitive values in sub arrays', () => {
+            const stubPrimitiveValues = [1, 2, 3, 4];
+            mockPropertyRegistration.length = 4;
+            expect(testPacketParser.unpackJsonPropertyValue(stubPrimitiveValues, mockPropertyRegistration)).toEqual([[1], [2], [3], [4]]);
+        });
 
-            it('should return an 2D array of the Object.values(value) in the correct format order', () => {
-                const expectedUnpackedData = [[0, 1, 2, 3]];
+        it('should throw an error if there are too many elements in the array', () => {
+            const stubPrimitiveValues = [1, 2, 3, 4];
+            mockPropertyRegistration.length = 2;
+            expect(() => testPacketParser.unpackJsonPropertyValue(stubPrimitiveValues, mockPropertyRegistration)).toThrow(new Error('Too many data entries'));
+        });
+    });
 
-                const stubGumbandColorValue: Record<string, DataType> = {
-                    red: 1,
-                    blue: 3,
-                    green: 2,
-                    white: 0,
-                };
+    describe('when propertyRegistration is "gmbnd_color"', () => {
+        let mockPropertyRegistration: V2PropertyRegistration;
 
-                const actualUnpackedData = testPacketParser.unpackJsonPropertyValue([stubGumbandColorValue], mockPropertyRegistration);
+        beforeEach(() => {
+            mockPropertyRegistration = {
+                path: '',
+                index: 0,
+                length: 1,
+                type: 'gmbnd_color',
+                format: 'N/A',
+                settable: true,
+                gettable: true,
+                min: 0,
+                max: 0,
+            };
+        });
 
-                expect(actualUnpackedData).toEqual(expectedUnpackedData);
-            });
+        it('should return an 2D array of the Object.values(value) in the correct format order', () => {
+            const expectedUnpackedData = [[0, 1, 2, 3]];
 
-            it('should return an 2D array of the Object.values(value) in the correct format order', () => {
-                const expectedUnpackedData = [[0, 1, 2, 3], [4, 5, 6, 7]];
+            const stubGumbandColorValue: Record<string, DataType> = {
+                red: 1,
+                blue: 3,
+                green: 2,
+                white: 0,
+            };
 
-                const stubGumbandColorValue1: Record<string, DataType> = {
-                    red: 1,
-                    blue: 3,
-                    green: 2,
-                    white: 0,
-                };
+            const actualUnpackedData = testPacketParser.unpackJsonPropertyValue([stubGumbandColorValue], mockPropertyRegistration);
 
-                const stubGumbandColorValue2: Record<string, DataType> = {
-                    blue: 7,
-                    red: 5,
-                    white: 4,
-                    green: 6,
-                };
+            expect(actualUnpackedData).toEqual(expectedUnpackedData);
+        });
 
-                const actualUnpackedData = testPacketParser.unpackJsonPropertyValue([stubGumbandColorValue1, stubGumbandColorValue2], mockPropertyRegistration);
+        it('should return an 2D array of the Object.values(value) in the correct format order', () => {
+            mockPropertyRegistration.length = 2;
+            const expectedUnpackedData = [[0, 1, 2, 3], [4, 5, 6, 7]];
 
-                expect(actualUnpackedData).toEqual(expectedUnpackedData);
-            });
+            const stubGumbandColorValue1: Record<string, DataType> = {
+                red: 1,
+                blue: 3,
+                green: 2,
+                white: 0,
+            };
+
+            const stubGumbandColorValue2: Record<string, DataType> = {
+                blue: 7,
+                red: 5,
+                white: 4,
+                green: 6,
+            };
+
+            const actualUnpackedData = testPacketParser.unpackJsonPropertyValue([stubGumbandColorValue1, stubGumbandColorValue2], mockPropertyRegistration);
+
+            expect(actualUnpackedData).toEqual(expectedUnpackedData);
+        });
+
+        it('should throw an error if there are too many data items in the array', () => {
+            mockPropertyRegistration.length = 1;
+
+            const stubGumbandColorValue1: Record<string, DataType> = {
+                red: 1,
+                blue: 3,
+                green: 2,
+                white: 0,
+            };
+
+            const stubGumbandColorValue2: Record<string, DataType> = {
+                blue: 7,
+                red: 5,
+                white: 4,
+                green: 6,
+            };
+
+            expect(() => testPacketParser.unpackJsonPropertyValue([stubGumbandColorValue1, stubGumbandColorValue2], mockPropertyRegistration)).toThrow(new Error('Too many data entries'));
+        });
+
+        // TODO: Should we validate the data types? How do we encode that in the custom property definition?
+
+        it('should throw an error if an item in the array is missing fields', () => {
+            expect(() => testPacketParser.unpackJsonPropertyValue([{ red: 1, blue: 3, green: 2 }], mockPropertyRegistration)).toThrow(new Error('Unpacking error'));
+        });
+
+        it('should throw an error if an item in the array is not a color object', () => {
+            expect(() => testPacketParser.unpackJsonPropertyValue([{ tortoise: 7, antelope: 5, narwhal: 4, porcupine: 6 }], mockPropertyRegistration)).toThrow(new Error('Unpacking error'));
+        });
+
+        it('should throw an error if there are too many fields in the object', () => {
+            expect(() => testPacketParser.unpackJsonPropertyValue([{ red: 1, blue: 3, green: 2, white: 0, purple: 8 }], mockPropertyRegistration)).toThrow(new Error('Unpacking error'));
         });
     });
 });
