@@ -222,7 +222,7 @@ export interface IHardwareRegistrationCache extends EventEmitter {
      */
     clearAllCacheForComponentId(componentId: string): Promise<void>;
 
-    locks?: IHardwareRegistrationCacheLocks;
+    locks: IHardwareRegistrationCacheLocks;
 }
 
 /**

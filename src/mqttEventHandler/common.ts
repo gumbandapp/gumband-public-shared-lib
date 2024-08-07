@@ -29,7 +29,7 @@ export async function lockRegistrationCacheAndPerformAction<T> (cache: IHardware
     async function releaseLocks () {
         Promise.all(
             Array.from(acquiredLocks.keys()).map(async (lock) => {
-                await cache.locks?.[lock].unlock(componentId);
+                await cache.locks[lock].unlock(componentId);
                 acquiredLocks.delete(lock);
             }),
         );
@@ -38,7 +38,7 @@ export async function lockRegistrationCacheAndPerformAction<T> (cache: IHardware
     try {
         await Promise.all(
             Array.from(locks).map(async (lock) => {
-                await cache.locks?.[lock].lock(componentId);
+                await cache.locks[lock].lock(componentId);
                 acquiredLocks.set(lock, lock);
             }),
         );
