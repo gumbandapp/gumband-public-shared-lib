@@ -2,10 +2,14 @@ import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals
 import Long from 'long';
 import struct, { DataType } from 'python-struct';
 import { V2PropertyRegistration } from '../../types/mqtt-api/mqtt-api-v2';
+import { GbLogger } from '../../utils/gbLogger';
 import { generateRandomNumber } from '../../utils/testResources';
 import { V2PacketParser } from './packetParser';
 
-const testPacketParser = new V2PacketParser();
+jest.mock('../../utils/gbLogger');
+const mockLogger = new GbLogger();
+
+const testPacketParser = new V2PacketParser(mockLogger);
 
 describe('ValidatePropertyValueBoundaries', () => {
     describe('ValidatePropertyValueBoundaries - Primatives', () => {
@@ -22,6 +26,7 @@ describe('ValidatePropertyValueBoundaries', () => {
                 min: 0,
                 max: 0,
             };
+            // eslint-disable-next-line no-console -- This is mock so it's fine
             console.log = jest.fn().mockImplementation(() => {});
         });
 
@@ -559,7 +564,9 @@ describe('packPropertyValue', () => {
 
 describe('Parse log', ()=>{
     beforeEach(() => {
+        // eslint-disable-next-line no-console -- This is a mock so it's fine
         console.log = jest.fn().mockImplementation(() => { });
+        // eslint-disable-next-line no-console -- This is a mock so it's fine
         console.debug = jest.fn().mockImplementation(() => { });
     });
     afterEach(() => {
