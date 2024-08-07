@@ -10,9 +10,41 @@ else
     echo "You are not pushing to the main branch, good job!"
 fi
 
-# Run the tests, if it fails, log some output but don't fail the commit
-npm run lint
-npm run build
-npm run test 
 
+# Set a start timer for full suite
+startFullSuite=$(date +%s)
+
+# Run linter, if it fails, then fail to push
+startLintTime=$(date +%s)
+npm run lint
+endLintTime=$(date +%s)
+lintTime=$((endLintTime-startLintTime))
+echo "Finished linting in $lintTime seconds" 
+
+# Run build step, if it fails, then still allow the push (for now)
+startBuildTime=$(date +%s)
+npm run build
+endFBuildTime=$(date +%s)
+buildTime=$((endFBuildTime-startBuildTime))
+echo "Finished building in $buildTime seconds"
+
+# Run unit tests, if it fails, then allow the push (for now)
+startTestTime=$(date +%s)
+npm run test
+endTestTime=$(date +%s)
+testTime=$((endTestTime-startTestTime))
+echo "Finished testing in $testTime seconds"
+
+# Run npm audit, if it fails, then allow the push (for now)
+startAuditTime=$(date +%s)
+npm audit --audit-level=high || true
+endAuditTime=$(date +%s)
+auditTime=$((endAuditTime-startAuditTime))
+
+endFullSuite=$(date +%s)
 echo "Husky Pre-Push hooks completed"
+totalFullSuiteTime=$((endFullSuite-startFullSuite))
+echo "Finished full suite in $totalFullSuiteTime seconds"
+echo "Finished linting in $lintTime seconds" 
+echo "Finished building in $buildTime seconds"
+echo "Finished testing in $testTime seconds"
