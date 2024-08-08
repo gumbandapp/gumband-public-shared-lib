@@ -12,6 +12,7 @@ import type {
 } from './authorizationAndSubscriptionEventPayloads';
 import type {
     ComponentAddedToExhibitPayload,
+    ComponentRemovedFromExhibitPayload,
     ComponentConnectedPayload,
     ComponentDisconnectedPayload,
     ComponentPropertyReceivedPayload,
@@ -44,6 +45,7 @@ export type SocketEventPayloadMap = {
     EXHIBIT_OFFLINE: ExhibitOfflinePayload;
     EXHIBIT_ONLINE: ExhibitOnlinePayload;
     COMPONENT_ADDED_TO_EXHIBIT: ComponentAddedToExhibitPayload;
+    COMPONENT_REMOVED_FROM_EXHIBIT: ComponentRemovedFromExhibitPayload;
     COMPONENT_CONNECTED: ComponentConnectedPayload;
     COMPONENT_DISCONNECTED: ComponentDisconnectedPayload;
     COMPONENT_PROPERTY_RECEIVED: ComponentPropertyReceivedPayload;
