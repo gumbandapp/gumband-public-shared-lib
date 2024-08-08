@@ -3,10 +3,12 @@ import { PropertyAccessError, PropertyInvalidError, setPropertyValue } from './p
 import { HardwareRegistrationCache } from '../hardwareRegistrationCache';
 import { ApiVersion, PropertyRegistration, V2PropertyType } from '../types';
 import { MqttPublishFunc } from '../mqttEventHandler';
+import { GbLogger } from './gbLogger';
 
 
 describe('setPropertyValue', () => {
-    const cache = new HardwareRegistrationCache();
+    const logger = new GbLogger();
+    const cache = new HardwareRegistrationCache(false, logger);
     let registration: PropertyRegistration;
     let mockMqttPublish: MqttPublishFunc;
 
@@ -33,25 +35,25 @@ describe('setPropertyValue', () => {
     });
 
     it('publishes using mqttFunction if everything is good', async () => {
-        await setPropertyValue(cache, '123', 'app', 'group/prop', [1, 2, 3], mockMqttPublish);
+        await setPropertyValue(cache, '123', 'app', 'group/prop', [1, 2, 3], mockMqttPublish, logger);
     });
 
     it('throws PropertyInvalidError if property does not exist', async () => {
         cache.getProperty = jest.fn(async () => {
             return undefined;
         });
-        await expect(setPropertyValue(cache, '123', 'app', 'group/prop', [1, 2, 3], mockMqttPublish)).rejects.toThrow(PropertyInvalidError);
+        await expect(setPropertyValue(cache, '123', 'app', 'group/prop', [1, 2, 3], mockMqttPublish, logger)).rejects.toThrow(PropertyInvalidError);
     });
 
     it('throws PropertyInvalidError if api version does not exist', async () => {
         cache.getMQTTAPIVersion = jest.fn(async () => {
             return undefined;
         });
-        await expect(setPropertyValue(cache, '123', 'app', 'group/prop', [1, 2, 3], mockMqttPublish)).rejects.toThrow(PropertyInvalidError);
+        await expect(setPropertyValue(cache, '123', 'app', 'group/prop', [1, 2, 3], mockMqttPublish, logger)).rejects.toThrow(PropertyInvalidError);
     });
 
     it('throws PropertyAccessError if property is not settable', async () => {
         registration.settable = false;
-        await expect(setPropertyValue(cache, '123', 'app', 'group/prop', [1, 2, 3], mockMqttPublish)).rejects.toThrow(PropertyAccessError);
+        await expect(setPropertyValue(cache, '123', 'app', 'group/prop', [1, 2, 3], mockMqttPublish, logger)).rejects.toThrow(PropertyAccessError);
     });
 });
