@@ -1088,7 +1088,7 @@ export class V2PacketParser {
             const unpackedJsonPropertyValue = this.unpackJsonPropertyValue(values, propertyRegistration);
             rawPayload = this.packPropertyValue(propertyRegistration.format, unpackedJsonPropertyValue);
         } catch (e) {
-            console.log(e);
+            this.logger.error(e);
             throw new PropertyFormatError(`componentId: ${componentId}, source: ${source}, propertyPath: ${propertyRegistration.path} had an issue packing the input ${JSON.stringify(values)}`);
         }
 
