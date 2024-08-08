@@ -2,6 +2,7 @@ import { AnySource, FormattedPropertyValue } from '../types';
 import { exhaustiveGuard } from './usefulTS';
 import { MqttPublishFunc, V2PacketParser } from '../mqttEventHandler';
 import { IHardwareRegistrationCache } from '../hardwareRegistrationCache';
+import { LoggerInterface } from './gbLogger';
 
 /**
  * Wrapper an Error if a property doesn't exist
@@ -51,8 +52,9 @@ export class PropertyFormatError extends Error {
  * @param {string} propertyPath - the name of the property to publish to
  * @param {FormattedPropertyValue} values - the formatted value to publish to the hardware
  * @param {MqttPublishFunc} mqttPublishFunc - mqtt publish function to use (could throw an error)
+ * @param {LoggerInterface} logger - logging interface
  */
-export const setPropertyValue = async (cache: IHardwareRegistrationCache, componentId: string, source: AnySource, propertyPath: string, values: FormattedPropertyValue, mqttPublishFunc: MqttPublishFunc) => {
+export const setPropertyValue = async (cache: IHardwareRegistrationCache, componentId: string, source: AnySource, propertyPath: string, values: FormattedPropertyValue, mqttPublishFunc: MqttPublishFunc, logger: LoggerInterface) => {
     const propertyRegistration = await cache.getProperty(componentId, source, propertyPath);
     const apiVersion = await cache.getMQTTAPIVersion(componentId);
 
@@ -68,7 +70,7 @@ export const setPropertyValue = async (cache: IHardwareRegistrationCache, compon
     switch (apiVersion) {
         case 2:
         {
-            const parser = new V2PacketParser();
+            const parser = new V2PacketParser(logger);
             await parser.setPropertyValue(componentId, source, propertyRegistration, values, mqttPublishFunc);
             break;
         }
