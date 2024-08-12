@@ -28,22 +28,18 @@ export async function lockRegistrationCacheAndPerformAction<T> (cache: IHardware
      */
     async function releaseLocks () {
         Promise.all(
-            Array.from(acquiredLocks.keys()).map((lock) => {
-                cache.locks?.[lock].unlock(componentId)
-                    .then(() => {
-                        acquiredLocks.delete(lock);
-                    });
+            Array.from(acquiredLocks.keys()).map(async (lock) => {
+                await cache.locks[lock].unlock(componentId);
+                acquiredLocks.delete(lock);
             }),
         );
     }
 
     try {
         await Promise.all(
-            Array.from(locks).map((lock) => {
-                cache.locks?.[lock].lock(componentId)
-                    .then(() => {
-                        acquiredLocks.set(lock, lock);
-                    });
+            Array.from(locks).map(async (lock) => {
+                await cache.locks[lock].lock(componentId);
+                acquiredLocks.set(lock, lock);
             }),
         );
     } catch (e) {
