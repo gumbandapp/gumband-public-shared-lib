@@ -974,11 +974,27 @@ export class V2PacketParser {
      * Helper method to unpack custom data types
      *
      * @param {V2JsonPropertyValue} value - unpacked property to be formatted
-     * @param {V2PropertyFormatInfo} customDataFormat - what custom data format to use
+     * @param {V2PropertyType} propertyType - type to unpack
      * @return {V2UnpackedPropertyValue} the unpacked custom data
      */
-    private unpackCustomData (value: V2JsonPropertyValue, customDataFormat: V2PropertyFormatInfo): V2UnpackedPropertyValue {
+    private unpackCustomData (value: V2JsonPropertyValue, propertyType: V2PropertyType): V2UnpackedPropertyValue {
         const unpackedDataArr: V2UnpackedPropertyValue = [];
+        let customDataFormat: V2PropertyFormatInfo;
+        switch (propertyType) {
+            case 'gmbnd_color':
+                customDataFormat = GMBND_COLOR_FORMAT;
+                break;
+            case 'gmbnd_led':
+                customDataFormat = GMBND_LED_FORMAT;
+                break;
+            default:
+                // fallback, parse best we can. This is only really relevant in the case that the hardware is trying to use a new custom datatype that has not been added to the backend yet.
+                value.forEach((subValue)=>{
+                    unpackedDataArr.push(Object.values(subValue));
+                });
+                return unpackedDataArr;
+        }
+
         value.forEach((subValue) => {
             // typescript wanted this checked
             if (typeof subValue === 'object' && subValue !== null && !Long.isLong(subValue) && customDataFormat) {
@@ -1011,35 +1027,23 @@ export class V2PacketParser {
      */
     public unpackJsonPropertyValue (value: V2JsonPropertyValue, propertyRegistration: V2PropertyRegistration): V2UnpackedPropertyValue {
         let unpackedDataArr: V2UnpackedPropertyValue = [];
-        switch (propertyRegistration.type) {
-            case 'gmbnd_primitive':
-                if (PROPERTY_FORMAT_STRING_REGEX.test(propertyRegistration.format) && typeof value[0] === 'string') {
-                    // We expect 's' format props to only have a single string in the array
-                    if (value[0].length > propertyRegistration.length) {
-                        throw new Error('String length too long');
-                    } else if (value.length > 1) {
-                        throw new Error('Too many data entries');
-                    } else {
-                        return [[value[0]]];
-                    }
+        if (propertyRegistration.type === 'gmbnd_primitive') {
+            if (PROPERTY_FORMAT_STRING_REGEX.test(propertyRegistration.format) && typeof value[0] === 'string') {
+                // We expect 's' format props to only have a single string in the array
+                if (value[0].length > propertyRegistration.length) {
+                    throw new Error('String length too long');
+                } else if (value.length > 1) {
+                    throw new Error('Too many data entries');
+                } else {
+                    return [[value[0]]];
                 }
+            }
 
-                value.forEach((item) => {
-                    unpackedDataArr.push([item as DataType]);
-                });
-
-                break;
-            case 'gmbnd_color':
-                unpackedDataArr = this.unpackCustomData(value, GMBND_COLOR_FORMAT);
-                break;
-            case 'gmbnd_led':
-                unpackedDataArr = this.unpackCustomData(value, GMBND_LED_FORMAT);
-                break;
-            default:
-                // fallback, parse best we can
-                value.forEach((subValue)=>{
-                    unpackedDataArr.push(Object.values(subValue));
-                });
+            value.forEach((item) => {
+                unpackedDataArr.push([item as DataType]);
+            });
+        } else {
+            unpackedDataArr = this.unpackCustomData(value, propertyRegistration.type);
         }
 
         if (unpackedDataArr.length > propertyRegistration.length) {

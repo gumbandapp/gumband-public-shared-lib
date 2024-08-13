@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
 import Long from 'long';
 import struct, { DataType } from 'python-struct';
-import { V2PropertyRegistration } from '../../types/mqtt-api/mqtt-api-v2';
+import { V2PropertyRegistration, V2PropertyType } from '../../types/mqtt-api/mqtt-api-v2';
 import { GbLogger } from '../../utils/gbLogger';
 import { generateRandomNumber } from '../../utils/testResources';
 import { V2PacketParser } from './packetParser';
@@ -562,6 +562,37 @@ describe('unpackJsonPropertyValue', () => {
 
         it('should throw an error if there are too many fields in the object', () => {
             expect(() => testPacketParser.unpackJsonPropertyValue([{ red: 1, blue: 3, green: 2, white: 0, purple: 8 }], mockPropertyRegistration)).toThrow(new Error('Unpacking error'));
+        });
+    });
+
+    describe('when propertyRegistration is unknown custom type', () => {
+        let mockPropertyRegistration: V2PropertyRegistration;
+        const expectedUnpackedData = [[2, 7, 5, 4, 6]];
+
+        beforeEach(() => {
+            mockPropertyRegistration = {
+                path: '',
+                index: 0,
+                length: 1,
+                type: 'zoo_census' as V2PropertyType,
+                format: 'N/A',
+                settable: true,
+                gettable: true,
+                min: 0,
+                max: 0,
+            };
+        });
+
+        it('should try its best to unpack what we give it', () => {
+            const animalCount = { panda: 2, tortoise: 7, antelope: 5, narwhal: 4, porcupine: 6 };
+            const actualUnpackedData = testPacketParser.unpackJsonPropertyValue([animalCount], mockPropertyRegistration);
+            expect(actualUnpackedData).toEqual(expectedUnpackedData);
+        });
+
+        it('should throw if the incorrect number of items are provided', () => {
+            const animalCount1 = { panda: 2, tortoise: 7, antelope: 5, narwhal: 4, porcupine: 6 };
+            const animalCount2 = { panda: 0, tortoise: 4, antelope: 0, narwhal: 0, porcupine: 2 };
+            expect(() => testPacketParser.unpackJsonPropertyValue([animalCount1, animalCount2], mockPropertyRegistration)).toThrow(new Error('Too many data entries'));
         });
     });
 });
