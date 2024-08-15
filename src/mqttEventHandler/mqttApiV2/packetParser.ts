@@ -5,9 +5,11 @@ import { isNativeError } from 'util/types';
 import Long from 'long';
 import struct, { DataType } from 'python-struct';
 import { GMBND_COLOR_FORMAT, GMBND_LED_FORMAT } from '.';
-import { V2ApiVersion, V2ApiVersions, V2ApplicationInfo, V2BasePropertyValue, V2JsonExtendedPropertyValue, V2JsonPropertyValue, V2Log, V2Platform, V2PropertyFormat, V2PropertyFormatInfo, V2PropertyRegistration, V2PropertyType, V2PropertyTypes, V2SystemInfo, V2SystemType, V2SystemTypes, V2UnpackedPropertyValue } from '../../types';
+import { V2ApiVersion, V2ApiVersions, V2ApplicationInfo, V2BasePropertyValue, V2JsonExtendedPropertyValue, V2JsonPropertyValue, V2Log, V2Platform, V2PropertyFormat, V2PropertyFormatInfo, V2PropertyRegistration, V2PropertyType, V2PropertyTypes, v2PropSetEndpoint, V2Source, V2SystemInfo, V2SystemType, V2SystemTypes, V2UnpackedPropertyValue } from '../../types';
 import { exhaustiveGuard } from '../../utils/usefulTS';
+import { PropertyFormatError } from '../../utils';
 
+export type MqttPublishFunc = (endpoint: string, rawPayload: Buffer) => Promise<void>;
 
 /*
 This regex is based on the spec from the node package that we intend to use for packing and unpacking property payloads: https://github.com/danielgindi/node-python-struct/blob/master/src/core.js#L4
@@ -969,31 +971,16 @@ export class V2PacketParser {
     }
 
     /**
+     * Helper method to unpack custom data types
      *
      * @param {V2JsonPropertyValue} value - unpacked property to be formatted
-     * @param {propertyRegistration} propertyRegistration - registration information on property
-     * @return {V2BasePropertyValue} - the formatted json blob with property information
+     * @param {V2PropertyType} propertyType - type to unpack
+     * @return {V2UnpackedPropertyValue} the unpacked custom data
      */
-    public unpackJsonPropertyValue (value: V2JsonPropertyValue, propertyRegistration: V2PropertyRegistration): V2UnpackedPropertyValue {
+    private unpackCustomData (value: V2JsonPropertyValue, propertyType: V2PropertyType): V2UnpackedPropertyValue {
         const unpackedDataArr: V2UnpackedPropertyValue = [];
-        let customDataFormat: V2PropertyFormatInfo | undefined = undefined;
-        switch (propertyRegistration.type) {
-            case 'gmbnd_primitive':
-                if (PROPERTY_FORMAT_STRING_REGEX.test(propertyRegistration.format) && typeof value[0] === 'string') {
-                    // We expect 's' format props to only have a single string in the array
-                    // Truncate to registered length if value is too long
-                    if (value[0].length > propertyRegistration.length) {
-                        return [[value[0].substring(0, propertyRegistration.length)]];
-                    } else {
-                        return [[value[0]]];
-                    }
-                }
-
-                for (let i = 0; i < propertyRegistration.length && value.length; i++) {
-                    unpackedDataArr.push([value[i] as DataType]);
-                }
-
-                return unpackedDataArr;
+        let customDataFormat: V2PropertyFormatInfo;
+        switch (propertyType) {
             case 'gmbnd_color':
                 customDataFormat = GMBND_COLOR_FORMAT;
                 break;
@@ -1001,26 +988,66 @@ export class V2PacketParser {
                 customDataFormat = GMBND_LED_FORMAT;
                 break;
             default:
-                exhaustiveGuard(propertyRegistration.type);
+                // fallback, parse best we can. This is only really relevant in the case that the hardware is trying to use a new custom datatype that has not been added to the backend yet.
+                value.forEach((subValue)=>{
+                    unpackedDataArr.push(Object.values(subValue));
+                });
+                return unpackedDataArr;
         }
-        if (customDataFormat===undefined) {
-            // fallback, parse best we can
-            value.forEach((subValue)=>{
-                unpackedDataArr.push(Object.values(subValue));
+
+        value.forEach((subValue) => {
+            // typescript wanted this checked
+            if (typeof subValue === 'object' && subValue !== null && !Long.isLong(subValue) && customDataFormat) {
+                const subArr: V2BasePropertyValue = [];
+                customDataFormat.forEach((format) => {
+                    if (subValue[format.name] !== undefined) {
+                        subArr.push(subValue[format.name]);
+                    }
+                });
+
+                // Fail unpacking if the value doesn't match the customDataFormat
+                if (subArr.length !== customDataFormat.length || Object.keys(subValue).length !== customDataFormat.length) {
+                    throw new Error('Unpacking error');
+                }
+
+                unpackedDataArr.push(subArr);
+            } else {
+                throw new Error('Error reading in data');
+            }
+        });
+
+        return unpackedDataArr;
+    }
+
+    /**
+     *
+     * @param {V2JsonPropertyValue} value - unpacked property to be formatted
+     * @param {propertyRegistration} propertyRegistration - registration information on property
+     * @return {V2BasePropertyValue} the formatted json blob with property information
+     */
+    public unpackJsonPropertyValue (value: V2JsonPropertyValue, propertyRegistration: V2PropertyRegistration): V2UnpackedPropertyValue {
+        let unpackedDataArr: V2UnpackedPropertyValue = [];
+        if (propertyRegistration.type === 'gmbnd_primitive') {
+            if (PROPERTY_FORMAT_STRING_REGEX.test(propertyRegistration.format) && typeof value[0] === 'string') {
+                // We expect 's' format props to only have a single string in the array
+                if (value[0].length > propertyRegistration.length) {
+                    throw new Error('String length too long');
+                } else if (value.length > 1) {
+                    throw new Error('Too many data entries');
+                } else {
+                    return [[value[0]]];
+                }
+            }
+
+            value.forEach((item) => {
+                unpackedDataArr.push([item as DataType]);
             });
         } else {
-            value.forEach((subValue) => {
-                // typescript wanted this checked
-                if (typeof subValue === 'object' && subValue !== null && !Long.isLong(subValue) && customDataFormat) {
-                    const subArr: V2BasePropertyValue = [];
-                    customDataFormat.forEach((format) => {
-                        subArr.push(subValue[format.name]);
-                    });
-                    unpackedDataArr.push(subArr);
-                } else {
-                    throw new Error('Error reading in data');
-                }
-            });
+            unpackedDataArr = this.unpackCustomData(value, propertyRegistration.type);
+        }
+
+        if (unpackedDataArr.length > propertyRegistration.length) {
+            throw new Error('Too many data entries');
         }
 
         return unpackedDataArr;
@@ -1048,5 +1075,27 @@ export class V2PacketParser {
         return Buffer.concat(values.map((value: Array<DataType>) => {
             return struct.pack(format, value);
         }));
+    }
+
+    /**
+     * Call the 'set' endpoint for a specified property given the formatted values. This will pack the values based on the property registration.
+     *
+     * @param {string} componentId - componentId of the property
+     * @param {V2Source} source - source of the property
+     * @param {V2PropertyRegistration} propertyRegistration - cached property registration
+     * @param {V2JsonPropertyValue} values - values to set
+     * @param {MqttPublishFunc} mqttPublishFunc - mqtt publish function to use (could throw an error)
+     */
+    public async setPropertyValue (componentId: string, source: V2Source, propertyRegistration: V2PropertyRegistration, values: V2JsonPropertyValue, mqttPublishFunc: MqttPublishFunc) {
+        let rawPayload = Buffer.from([]);
+        try {
+            const unpackedJsonPropertyValue = this.unpackJsonPropertyValue(values, propertyRegistration);
+            rawPayload = this.packPropertyValue(propertyRegistration.format, unpackedJsonPropertyValue);
+        } catch (e) {
+            this.logger.error(e);
+            throw new PropertyFormatError(`componentId: ${componentId}, source: ${source}, propertyPath: ${propertyRegistration.path} had an issue packing the input ${JSON.stringify(values)}`);
+        }
+
+        await mqttPublishFunc(v2PropSetEndpoint(componentId, propertyRegistration.path, source), rawPayload);
     }
 }
