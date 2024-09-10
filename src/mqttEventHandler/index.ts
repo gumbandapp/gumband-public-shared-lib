@@ -98,7 +98,7 @@ export class MQTTEventHandler extends EventEmitter {
      * @param {string} componentId - hardware id
      * @param {ApiVersion} apiVersion - MQTT API version
      */
-    async handlePendingMessages(componentId: string, apiVersion: ApiVersion): Promise<void> {
+    async handlePendingMessages (componentId: string, apiVersion: ApiVersion): Promise<void> {
         let timeout = false;
         setTimeout( () => timeout = true, HANDLE_PENDING_MESSAGES_TIMEOUT_MS);
         let pendingMessage = await this.cache.getPendingMessage(componentId);
