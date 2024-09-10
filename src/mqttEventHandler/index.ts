@@ -10,6 +10,8 @@ import { LoggerInterface } from '../utils/gbLogger';
 import { exhaustiveGuard } from '../utils/usefulTS';
 import { MqttApiV2 } from './mqttApiV2';
 
+const HANDLE_PENDING_MESSAGES_TIMEOUT_MS = 3 * 1000;
+
 /**
  * MQTT Event Handler class - previously known as the Hardware Event Handler in the GBTT Service
  * - previously known as the Hardware Event Bus in the Hardware Service (lol)
@@ -60,10 +62,10 @@ export class MQTTEventHandler extends EventEmitter {
      * @param {object} payload - published data
      */
     async onMessage (componentId: string, topic: string, payload: Buffer): Promise<void> {
-        let apiVersion: ApiVersion | undefined;
+        let cachedApiVersion: ApiVersion | undefined;
 
         try {
-            apiVersion = await this.cache.getMQTTAPIVersion(componentId);
+            cachedApiVersion = await this.cache.getMQTTAPIVersion(componentId);
         } catch (e) {
             const message = `Unable to get MQTT API Version from cache for componentId: ${componentId}`;
             this.logger.error(message);
@@ -72,17 +74,65 @@ export class MQTTEventHandler extends EventEmitter {
             return;
         }
 
-        // If the API version isn't available, we need to grab it from the initial registration
-        if (isMQTTInitialRegistrationTopic(topic) && apiVersion === undefined) {
-            apiVersion = await this.getApiVersionFromRegistrationTopic(componentId, topic, payload);
+        if (cachedApiVersion === undefined) {
+            if (isMQTTInitialRegistrationTopic(topic)) {
+                // Handle the registration message
+                const parsedApiVersion = await this.getApiVersionFromRegistrationTopic(componentId, topic, payload);
+                await this.handleVersionedMessage(componentId, topic, payload, parsedApiVersion);
+
+                // Handle any pending messages that came in before the API version was available
+                await this.handlePendingMessages(componentId, parsedApiVersion);
+            } else {
+                // Cache the message for later if the registration topic hasn't come in yet.
+                await this.cache.cachePendingMessage(componentId, topic, payload);
+            }
+            return;
         }
 
+        await this.handleVersionedMessage(componentId, topic, payload, cachedApiVersion);
+    }
+
+    /**
+     * Work through the pending messages that were queued up before registration came in.
+     *
+     * @param {string} componentId - hardware id
+     * @param {ApiVersion} apiVersion - MQTT API version
+     */
+    async handlePendingMessages(componentId: string, apiVersion: ApiVersion): Promise<void> {
+        let timeout = false;
+        setTimeout( () => timeout = true, HANDLE_PENDING_MESSAGES_TIMEOUT_MS);
+        let pendingMessage = await this.cache.getPendingMessage(componentId);
+        while (pendingMessage !== null) {
+            if (timeout) {
+                this.logger.error(`Handle pending message timeout for componentId: ${componentId}`);
+                return;
+            }
+
+            try {
+                await this.handleVersionedMessage(componentId, pendingMessage.topic, pendingMessage.payload, apiVersion);
+            } catch (e) {
+                this.logger.error(`Failed to handle pending message: ${JSON.stringify(pendingMessage)}`);
+            }
+            this.logger.debug(`Handled pending message: ${JSON.stringify(pendingMessage)}`);
+            pendingMessage = await this.cache.getPendingMessage(componentId);
+        }
+
+        // Don't necessarily rely on the getPendingMessage call to clear out the queue
+        await this.cache.clearPendingMessages(componentId);
+    }
+
+    /**
+     * Handle a message with a known API version
+     *
+     * @param {string} componentId - hardware id
+     * @param {string} topic - mqtt topic
+     * @param {Buffer} payload - mqtt message
+     * @param {ApiVersion} apiVersion - MQTT API version
+     */
+    async handleVersionedMessage (componentId: string, topic: string, payload: Buffer, apiVersion: ApiVersion): Promise<void> {
         switch (apiVersion) {
             case 2:
                 await this.mqttV2Api.onMessage(componentId, topic as V2ApiTopic, payload);
-                return;
-            default:
-                this.logger.warn(`Unrecognized MQTT API Version (${apiVersion}) for componentId: ${componentId}`);
         }
     }
 
@@ -96,7 +146,7 @@ export class MQTTEventHandler extends EventEmitter {
      * @param {MQTTInitialRegistrationTopic} topic - the topic indicating the initial registration
      * @param {object} payload - The incoming hardware data
      */
-    private async getApiVersionFromRegistrationTopic (_componentId: string, topic: MQTTInitialRegistrationTopic, payload: Buffer): Promise<ApiVersion | undefined> {
+    private async getApiVersionFromRegistrationTopic (_componentId: string, topic: MQTTInitialRegistrationTopic, payload: Buffer): Promise<ApiVersion> {
         this.logger.debug('baseMqttPacketHandler.registerSystem()');
         switch (topic) {
             case V2SystemInfoTopic:

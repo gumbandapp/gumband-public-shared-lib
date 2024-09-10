@@ -3,6 +3,14 @@ import { AnySource, ApiVersion, ApplicationInfo, SystemInfo, PropertyRegistratio
 
 
 /**
+ * Structure of the cached pending messages to be replayed once the API version is known
+ */
+export type CachedPendingMessage = {
+    topic: string;
+    payload: Buffer;
+}
+
+/**
  * This interface is meant to be implemented as a redis cache in the cloud and implemented as some a local cache for the SDK
  *
  * Implementations of this class cache the registration messages for future reference and serve as the source to determine whether or not hardware
@@ -221,6 +229,30 @@ export interface IHardwareRegistrationCache extends EventEmitter {
      * @throws {Error} if the cache fails to remove the data
      */
     clearAllCacheForComponentId(componentId: string): Promise<void>;
+
+    /**
+     * Cache a pending message for the given componentId to be handled later once the API version is known
+     *
+     * @param {string} componentId - the componentId for the pending message
+     * @param {string} topic - the topic for the pending message
+     * @param {Buffer} payload - the payload for the pending message
+     */
+    cachePendingMessage(componentId: string, topic: string, payload: Buffer): Promise<void>;
+
+    /**
+     * Get the next pending message from the cache for the given componentId
+     *
+     * @param {string} componentId - the componentId for the pending message
+     * @returns {Promise<CachedPendingMessage | null>} the message, or null if there are no more messages to get
+     */
+    getPendingMessage(componentId: string): Promise<CachedPendingMessage | null>;
+
+    /**
+     * Clear out any pending messages for the given componentId
+     *
+     * @param {string} componentId - the componentId for the pending message
+     */
+    clearPendingMessages(componentId: string): Promise<void>;
 
     locks: IHardwareRegistrationCacheLocks;
 }
