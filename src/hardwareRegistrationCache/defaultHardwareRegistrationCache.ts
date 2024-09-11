@@ -386,7 +386,7 @@ export class HardwareRegistrationCache extends EventEmitter implements IHardware
      * @param {string} componentId - the componentId for the pending message
      * @return {Promise<CachedPendingMessage | null>} the message, or null if there are no more messages to get
      */
-    async getPendingMessage (componentId: string): Promise<CachedPendingMessage | null> {
+    async getNextPendingMessage (componentId: string): Promise<CachedPendingMessage | null> {
         return this.pendingMessages[componentId]?.shift() ?? null;
     }
 

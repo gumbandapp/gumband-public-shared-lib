@@ -245,7 +245,7 @@ export interface IHardwareRegistrationCache extends EventEmitter {
      * @param {string} componentId - the componentId for the pending message
      * @returns {Promise<CachedPendingMessage | null>} the message, or null if there are no more messages to get
      */
-    getPendingMessage(componentId: string): Promise<CachedPendingMessage | null>;
+    getNextPendingMessage(componentId: string): Promise<CachedPendingMessage | null>;
 
     /**
      * Clear out any pending messages for the given componentId

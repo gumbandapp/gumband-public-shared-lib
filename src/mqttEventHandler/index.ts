@@ -101,7 +101,7 @@ export class MQTTEventHandler extends EventEmitter {
     async handlePendingMessages (componentId: string, apiVersion: ApiVersion): Promise<void> {
         let timeout = false;
         setTimeout( () => timeout = true, HANDLE_PENDING_MESSAGES_TIMEOUT_MS);
-        let pendingMessage = await this.cache.getPendingMessage(componentId);
+        let pendingMessage = await this.cache.getNextPendingMessage(componentId);
         while (pendingMessage !== null) {
             if (timeout) {
                 this.logger.error(`Handle pending message timeout for componentId: ${componentId}`);
@@ -110,11 +110,12 @@ export class MQTTEventHandler extends EventEmitter {
 
             try {
                 await this.handleVersionedMessage(componentId, pendingMessage.topic, pendingMessage.payload, apiVersion);
+                this.logger.debug(`Handled pending message: ${JSON.stringify(pendingMessage)}`);
             } catch (e) {
                 this.logger.error(`Failed to handle pending message: ${JSON.stringify(pendingMessage)}`);
             }
-            this.logger.debug(`Handled pending message: ${JSON.stringify(pendingMessage)}`);
-            pendingMessage = await this.cache.getPendingMessage(componentId);
+
+            pendingMessage = await this.cache.getNextPendingMessage(componentId);
         }
 
         // Don't necessarily rely on the getPendingMessage call to clear out the queue
