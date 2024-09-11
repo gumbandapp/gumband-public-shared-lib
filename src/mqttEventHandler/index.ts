@@ -86,10 +86,9 @@ export class MQTTEventHandler extends EventEmitter {
                 // Cache the message for later if the registration topic hasn't come in yet.
                 await this.cache.cachePendingMessage(componentId, topic, payload);
             }
-            return;
+        } else {
+            await this.handleVersionedMessage(componentId, topic, payload, cachedApiVersion);
         }
-
-        await this.handleVersionedMessage(componentId, topic, payload, cachedApiVersion);
     }
 
     /**
