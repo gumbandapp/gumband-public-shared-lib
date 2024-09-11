@@ -103,7 +103,7 @@ export class MQTTEventHandler extends EventEmitter {
         let pendingMessage = await this.cache.getNextPendingMessage(componentId);
         while (pendingMessage !== null) {
             if (timeout) {
-                this.logger.error(`Handle pending message timeout for componentId: ${componentId}`);
+                this.logger.warn(`Handle pending message timeout for componentId: ${componentId}`);
                 return;
             }
 
@@ -111,7 +111,7 @@ export class MQTTEventHandler extends EventEmitter {
                 await this.handleVersionedMessage(componentId, pendingMessage.topic, pendingMessage.payload, apiVersion);
                 this.logger.debug(`Handled pending message: ${JSON.stringify(pendingMessage)}`);
             } catch (e) {
-                this.logger.error(`Failed to handle pending message: ${JSON.stringify(pendingMessage)}`);
+                this.logger.warn(`Failed to handle pending message: ${JSON.stringify(pendingMessage)}`);
             }
 
             pendingMessage = await this.cache.getNextPendingMessage(componentId);
