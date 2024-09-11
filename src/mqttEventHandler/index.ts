@@ -117,9 +117,6 @@ export class MQTTEventHandler extends EventEmitter {
 
             pendingMessage = await this.cache.getNextPendingMessage(componentId);
         }
-
-        // Don't necessarily rely on the getPendingMessage call to clear out the queue
-        await this.cache.clearPendingMessages(componentId);
     }
 
     /**
