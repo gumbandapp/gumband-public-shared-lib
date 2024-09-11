@@ -14,6 +14,8 @@ type PartialHardwareManifest = Partial<Omit<HardwareRegistration, 'app' | 'syste
 
 type RegistrationHash = Record<string, PartialHardwareManifest>;
 
+const PENDING_MESSAGES_COUNT_MAX = 100;
+
 /**
  * Very basic locking mechanism with timeout support
  *
@@ -374,6 +376,10 @@ export class HardwareRegistrationCache extends EventEmitter implements IHardware
      */
     async cachePendingMessage (componentId: string, topic: string, payload: Buffer): Promise<void> {
         if (Array.isArray(this.pendingMessages[componentId])) {
+            // Keep the list constrained
+            if (this.pendingMessages[componentId].length >= PENDING_MESSAGES_COUNT_MAX) {
+                this.pendingMessages[componentId].shift();
+            }
             this.pendingMessages[componentId].push({ topic, payload });
         } else {
             this.pendingMessages[componentId] = [{ topic, payload }];
