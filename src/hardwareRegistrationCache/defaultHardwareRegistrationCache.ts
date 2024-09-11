@@ -387,7 +387,14 @@ export class HardwareRegistrationCache extends EventEmitter implements IHardware
      * @return {Promise<CachedPendingMessage | null>} the message, or null if there are no more messages to get
      */
     async getNextPendingMessage (componentId: string): Promise<CachedPendingMessage | null> {
-        return this.pendingMessages[componentId]?.shift() ?? null;
+        const pendingMessage = this.pendingMessages[componentId]?.shift();
+
+        // If the list is empty clean up the entry
+        if (this.pendingMessages[componentId]?.length === 0) {
+            delete this.pendingMessages[componentId];
+        }
+
+        return pendingMessage ?? null;
     }
 
     /**
