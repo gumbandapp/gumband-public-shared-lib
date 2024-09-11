@@ -5,7 +5,7 @@ import EventEmitter from 'events';
 import mqtt from 'mqtt';
 import { isNativeError } from 'util/types';
 import { IHardwareRegistrationCache } from '../hardwareRegistrationCache';
-import { ApiVersion, MQTTInitialRegistrationTopic, V2ApiTopic, V2SystemInfoTopic, isMQTTInitialRegistrationTopic } from '../types';
+import { ApiVersion, MQTTInitialRegistrationTopic, V2ApiTopic, V2SystemInfoTopic, isApiVersion, isMQTTInitialRegistrationTopic } from '../types';
 import { LoggerInterface } from '../utils/gbLogger';
 import { exhaustiveGuard } from '../utils/usefulTS';
 import { MqttApiV2 } from './mqttApiV2';
@@ -164,7 +164,16 @@ export class MQTTEventHandler extends EventEmitter {
                     throw new Error(message);
                 }
                 this.logger.debug(`Received ${topic}: ${JSON.stringify(jsonPayload)}`);
-                return jsonPayload?.api_ver;
+
+                // Validate API Version
+                const apiVer = jsonPayload?.api_ver;
+                if (isApiVersion(apiVer)) {
+                    return apiVer;
+                } else {
+                    const message = `${_componentId}: Invalid API version (${apiVer}) for registration topic: ${topic}`;
+                    this.logger.error(message);
+                    throw new Error(message);
+                }
             }
             default:
                 return exhaustiveGuard(topic);
