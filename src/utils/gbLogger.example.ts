@@ -6,11 +6,10 @@ import winston from 'winston';
 import { GbLogger } from './gbLogger';
 
 // A Simple logger takes no args and uses all our defaults
-const simpleLogger = new GbLogger();
-simpleLogger.error('this is a simple error message');
-simpleLogger.warn('this is a simple warn message');
-simpleLogger.info('this is a simple info message');
-simpleLogger.debug('this is a simple debug message');
+GbLogger.error('this is a simple error message');
+GbLogger.warn('this is a simple warn message');
+GbLogger.info('this is a simple info message');
+GbLogger.debug('this is a simple debug message');
 // You won't see this last one because the default log level is 'info' and above
 // see: https://github.com/winstonjs/winston?tab=readme-ov-file#logging-levels
 
@@ -19,7 +18,7 @@ simpleLogger.debug('this is a simple debug message');
 // 'TEST Harness' is the name of the logger, it will be printed with each log message
 // 'America/New_York' is the timezone we want to use for the timestamps
 // 'hideUtc' is a flag that tells the logger to hide the UTC time in the log messages (since we have our local time)
-const logger = new GbLogger({
+GbLogger.configureLogger({
     level: 'silly',
     name: 'MyTestLogger',
     tz: 'America/New_York',
@@ -27,13 +26,13 @@ const logger = new GbLogger({
 });
 
 // These logs will ONLY go to stdout, the default transport bundled with GBLogger
-logger.error('This is an error message');
-logger.warn('This is a warn message');
-logger.info('This is an info message');
-logger.http('This is an http message');
-logger.verbose('This is a verbose message');
-logger.debug('This is a debug message');
-logger.silly('This is a silly message');
+GbLogger.error('This is an error message');
+GbLogger.warn('This is a warn message');
+GbLogger.info('This is an info message');
+GbLogger.http('This is an http message');
+GbLogger.verbose('This is a verbose message');
+GbLogger.debug('This is a debug message');
+GbLogger.silly('This is a silly message');
 
 
 // We can also create winston transports and add them post-creation to a logger instance.
@@ -50,18 +49,18 @@ const fileTransport = new winston.transports.File({
         )),
 });
 // Take our new transport and add it to the existing logger
-logger.addTransport(fileTransport);
+GbLogger.addTransport(fileTransport);
 
 // Some more logs, but only the errors will go to the file
 // as the .error calls will use the file transport
-logger.error('This is an error message that will go to file as well');
-logger.warn('This is a warn message that will go to file as well');
-logger.info('This is an info message that will go to file as well');
-logger.http('This is an http message that will go to file as well');
-logger.verbose('This is a verbose message that will go to file as well');
-logger.debug('This is a debug message that will go to file as well');
-logger.silly('This is a silly message that will go to file as well');
-logger.error('And this is the last error message that will go to file as well');
+GbLogger.error('This is an error message that will go to file as well');
+GbLogger.warn('This is a warn message that will go to file as well');
+GbLogger.info('This is an info message that will go to file as well');
+GbLogger.http('This is an http message that will go to file as well');
+GbLogger.verbose('This is a verbose message that will go to file as well');
+GbLogger.debug('This is a debug message that will go to file as well');
+GbLogger.silly('This is a silly message that will go to file as well');
+GbLogger.error('And this is the last error message that will go to file as well');
 
 
 // Final Thoughts:

@@ -2,14 +2,11 @@ import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals
 import Long from 'long';
 import struct, { DataType } from 'python-struct';
 import { V2PropertyRegistration, V2PropertyType } from '../../types/mqtt-api/mqtt-api-v2';
-import { GbLogger } from '../../utils/gbLogger';
 import { generateRandomNumber } from '../../utils/testResources';
 import { V2PacketParser } from './packetParser';
 
 jest.mock('../../utils/gbLogger');
-const mockLogger = new GbLogger();
-
-const testPacketParser = new V2PacketParser(mockLogger);
+const testPacketParser = new V2PacketParser();
 
 describe('ValidatePropertyValueBoundaries', () => {
     describe('ValidatePropertyValueBoundaries - Primatives', () => {

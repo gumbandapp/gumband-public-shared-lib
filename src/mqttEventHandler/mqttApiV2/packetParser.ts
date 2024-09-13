@@ -1,4 +1,4 @@
-import { LoggerInterface } from './../../utils/gbLogger';
+import { GbLogger } from './../../utils/gbLogger';
 
 import { isNativeError } from 'util/types';
 
@@ -29,15 +29,10 @@ const INVALID_PROPERTY_PATH_CHARS = /[^\x20-\x22\x25-\x2A\x2C-\x7E]/; // Negated
  * This class will contains validation methods for the MQTT API Version 2
  */
 export class V2PacketParser {
-    protected logger: LoggerInterface;
-
     /**
      * A class to assist in the parsing of MQTT API V2 packets
-     * @param {LoggerInterface} logger - The logger instance
      */
-    constructor (logger: LoggerInterface) {
-        this.logger = logger;
-    }
+    constructor () {}
     /**
      * This function attempts to decode a Buffer payload into a V2 system info payload.
      *
@@ -46,21 +41,21 @@ export class V2PacketParser {
      * @throws {Error} if an error occurs in parsing
      */
     async parseSystemInfo (payload: Buffer): Promise<V2SystemInfo> {
-        this.logger.verbose('MqttApiV2Parser.parseSystemInfo()');
+        GbLogger.verbose('MqttApiV2Parser.parseSystemInfo()');
         let jsonPayload;
         try {
             const decodedPayload = payload.toString('utf-8');
             jsonPayload = JSON.parse(decodedPayload);
         } catch (e) {
             const message = 'Payload could not be JSON parsed';
-            this.logger.error(message);
+            GbLogger.error(message);
             if (isNativeError(e)) {
-                this.logger.error(e.message);
+                GbLogger.error(e.message);
             }
             throw new Error(message);
         }
 
-        this.logger.debug(`Received system info: ${JSON.stringify(jsonPayload)}`);
+        GbLogger.debug(`Received system info: ${JSON.stringify(jsonPayload)}`);
         return this.validateSystemInfo(jsonPayload);
     }
 
@@ -110,7 +105,7 @@ export class V2PacketParser {
 
                 for (const key of Object.keys(v2SystemInfo)) {
                     if (!v2SystemInfoFields[key as keyof V2SystemInfo]) {
-                        this.logger.debug(`Deleted extra key ${key} from System Info`);
+                        GbLogger.debug(`Deleted extra key ${key} from System Info`);
                         delete v2SystemInfo[key as keyof V2SystemInfo];
                     }
                 }
@@ -287,7 +282,7 @@ export class V2PacketParser {
 
                 for (const key of Object.keys(platform)) {
                     if (!v2PlatformFields[key as keyof V2Platform]) {
-                        this.logger.debug(`Deleted extra key ${key} from System platform`);
+                        GbLogger.debug(`Deleted extra key ${key} from System platform`);
                         delete platform[key as keyof V2Platform];
                     }
                 }
@@ -364,21 +359,21 @@ export class V2PacketParser {
      * @return {Promise<V2ApplicationInfo>}
      */
     async parseApplicationInfo (payload: Buffer): Promise<V2ApplicationInfo> {
-        this.logger.verbose('MqttApiV2Parser.parseApplicationInfo()');
+        GbLogger.verbose('MqttApiV2Parser.parseApplicationInfo()');
         let jsonPayload;
         try {
             const decodedPayload = payload.toString('utf-8');
             jsonPayload = JSON.parse(decodedPayload);
         } catch (e) {
             const message = `Payload could not be JSON parsed: ${payload}`;
-            this.logger.error(message);
+            GbLogger.error(message);
             if (isNativeError(e)) {
-                this.logger.error(e.message);
+                GbLogger.error(e.message);
             }
             throw new Error(message);
         }
 
-        this.logger.debug(`Received app info: ${JSON.stringify(jsonPayload)}`);
+        GbLogger.debug(`Received app info: ${JSON.stringify(jsonPayload)}`);
         return this.validateApplicationInfo(jsonPayload);
     }
 
@@ -419,7 +414,7 @@ export class V2PacketParser {
 
                 for (const key of Object.keys(appInfo)) {
                     if (!v2AppInfoFields[key as keyof V2ApplicationInfo]) {
-                        this.logger.debug(`Deleted extra key ${key} from App Info`);
+                        GbLogger.debug(`Deleted extra key ${key} from App Info`);
                         delete appInfo[key as keyof V2ApplicationInfo];
                     }
                 }
@@ -478,21 +473,21 @@ export class V2PacketParser {
      * @return {Promise<V2Log>}
      */
     async parseLog (payload: Buffer): Promise<V2Log> {
-        this.logger.verbose('MqttApiV2Parser.parseLog()');
+        GbLogger.verbose('MqttApiV2Parser.parseLog()');
         let jsonPayload;
         try {
             const decodedPayload = payload.toString('utf-8');
             jsonPayload = JSON.parse(decodedPayload);
         } catch (e) {
             const message = `Payload could not be JSON parsed: ${payload}`;
-            this.logger.error(message);
+            GbLogger.error(message);
             if (isNativeError(e)) {
-                this.logger.error(e.message);
+                GbLogger.error(e.message);
             }
             throw new Error(message);
         }
 
-        this.logger.debug(`Received log: ${JSON.stringify(jsonPayload)}`);
+        GbLogger.debug(`Received log: ${JSON.stringify(jsonPayload)}`);
         return this.validateLog(jsonPayload);
     }
 
@@ -521,21 +516,21 @@ export class V2PacketParser {
      * @return {Promise<V2PropertyRegistration>}
      */
     async parseProperty (payload: Buffer): Promise<V2PropertyRegistration> {
-        this.logger.verbose('MqttApiV2Parser.parseProperty()');
+        GbLogger.verbose('MqttApiV2Parser.parseProperty()');
         let jsonPayload;
         try {
             const decodedPayload = payload.toString('utf-8');
             jsonPayload = JSON.parse(decodedPayload);
         } catch (e) {
             const message = `Payload could not be JSON parsed: ${payload}`;
-            this.logger.error(message);
+            GbLogger.error(message);
             if (isNativeError(e)) {
-                this.logger.error(e.message);
+                GbLogger.error(e.message);
             }
             throw new Error(message);
         }
 
-        this.logger.debug(`Received property: ${JSON.stringify(jsonPayload)}`);
+        GbLogger.debug(`Received property: ${JSON.stringify(jsonPayload)}`);
         return this.validateProperty(jsonPayload);
     }
 
@@ -605,7 +600,7 @@ export class V2PacketParser {
 
                 for (const key of Object.keys(prop)) {
                     if (!v2PropFields[key as keyof V2PropertyRegistration]) {
-                        this.logger.debug(`Deleted extra key ${key} from Property`);
+                        GbLogger.debug(`Deleted extra key ${key} from Property`);
                         delete prop[key as keyof V2PropertyRegistration];
                     }
                 }
@@ -907,9 +902,9 @@ export class V2PacketParser {
             }
         } catch (e) {
             const message = `Payload could not be struct parsed: ${payload}`;
-            this.logger.error(message);
+            GbLogger.error(message);
             if (isNativeError(e)) {
-                this.logger.error(e.message);
+                GbLogger.error(e.message);
             }
             throw new Error(message);
         }
@@ -1092,7 +1087,7 @@ export class V2PacketParser {
             const unpackedJsonPropertyValue = this.unpackJsonPropertyValue(values, propertyRegistration);
             rawPayload = this.packPropertyValue(propertyRegistration.format, unpackedJsonPropertyValue);
         } catch (e) {
-            this.logger.error(e);
+            GbLogger.error(e);
             throw new PropertyFormatError(`componentId: ${componentId}, source: ${source}, propertyPath: ${propertyRegistration.path} had an issue packing the input ${JSON.stringify(values)}`);
         }
 

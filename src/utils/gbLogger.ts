@@ -17,24 +17,36 @@ export type GbLoggerConstructorObjectOpts = {
     tz?: string; // A timezone string, when omitted timestamps will be UTC
 };
 
-
-export interface LoggerInterface {
-    error: (message: any) => void;
-    warn: (message: any) => void;
-    info: (message: any) => void;
-    http: (message: any) => void;
-    verbose: (message: any) => void;
-    debug: (message: any) => void;
-    silly: (message: any) => void;
-}
 /**
  * A logger class that wraps winston
  */
-export class GbLogger implements LoggerInterface {
-    private logger: WinstonLogger;
+export class GbLogger {
+    private static gbDefaultConsoleTransport = new winston.transports.Console({
+        format: winston.format.combine(
+            winston.format.colorize(),
+            winston.format.timestamp(),
+            winston.format.printf(({ timestamp, level, message, label }) => {
+                const localTime = moment(timestamp).format('YYYY-MM-DD HH:mm:ss z');
+                const utcTime = moment(timestamp).utc().format('YYYY-MM-DD HH:mm:ss [UTC]');
+                const utcFormatted = `(${utcTime}) `;
+                const maybeUtcValue = utcFormatted;
+                const maybeLabelValue = label ? `[${label}] ` : '';
+                if (utcTime === 'Invalid date') {
+                    return `${maybeUtcValue}${maybeLabelValue}${level}: ${message}`;
+                } else {
+                    return `${localTime} ${maybeUtcValue}[${label}] ${level}: ${message}`;
+                }
+            }),
+        ),
+    });
+    private static logger: WinstonLogger = winston.createLogger({
+        level: 'info',
+        levels: winston.config.npm.levels,
+        transports: [GbLogger.gbDefaultConsoleTransport],
+    });
 
     /**
-     * Default constructor
+     * Configure the logger
      * @param {opts} opts - Options for the logger
      * @param {string} opts.name - A short name for the logger to be printed with each log message
      * @param {string} [opts.level='info'] - The default log level for this logger, see https://github.com/winstonjs/winston?tab=readme-ov-file#logging-levels
@@ -42,9 +54,7 @@ export class GbLogger implements LoggerInterface {
      * @param {boolean} [opts.hideUtc=false] - If true, the UTC timestamp will not be printed in the log message
      * @param {VariousWinstonTransportInstancesArray} [opts.transports=[]] - Additional winston transports to add during instantiation
      */
-    constructor (opts?: GbLoggerConstructorObjectOpts) {
-        // Create a default console transport
-
+    static configureLogger (opts?: GbLoggerConstructorObjectOpts) {
         const hideUtc = opts?.hideUtc || false;
         const level = opts?.level || LOG_LEVELS.INFO;
         const name = opts?.name || '';
@@ -78,8 +88,7 @@ export class GbLogger implements LoggerInterface {
             ),
         });
 
-        // Create the logger instance with default and additional transports
-        this.logger = winston.createLogger({
+        GbLogger.logger = winston.createLogger({
             level: level || 'info',
             levels: winston.config.npm.levels,
             transports: [gbDefaultConsoleTransport, ...transports],
@@ -91,8 +100,8 @@ export class GbLogger implements LoggerInterface {
      *
      * @param {any} transport - A winston transport instance
      */
-    addTransport (transport: any): void {
-        this.logger.add(transport);
+    static addTransport (transport: any): void {
+        GbLogger.logger.add(transport);
     }
 
     /**
@@ -100,8 +109,8 @@ export class GbLogger implements LoggerInterface {
      *
      * @param {any} transport - A winston transport instance
      */
-    removeTransport (transport: any): void {
-        this.logger.remove(transport);
+    static removeTransport (transport: any): void {
+        GbLogger.logger.remove(transport);
     }
 
     /**
@@ -109,16 +118,16 @@ export class GbLogger implements LoggerInterface {
      *
      * @param {*} message - Whatever you'd like to log
      */
-    error (message: any): void {
-        this.logger.error(message);
+    static error (message: any): void {
+        GbLogger.logger.error(message);
     }
     /**
      * Send a warn log
      *
      * @param {*} message - Whatever you'd like to log
      */
-    warn (message: any): void {
-        this.logger.warn(message);
+    static warn (message: any): void {
+        GbLogger.logger.warn(message);
     }
 
     /**
@@ -126,16 +135,16 @@ export class GbLogger implements LoggerInterface {
      *
      * @param {*} message - Whatever you'd like to log
      */
-    info (message: any): void {
-        this.logger.info(message);
+    static info (message: any): void {
+        GbLogger.logger.info(message);
     }
 
     /**
      *
      * @param {*} message - Whatever you'd like to log
      */
-    http (message: any): void {
-        this.logger.http(message);
+    static http (message: any): void {
+        GbLogger.logger.http(message);
     }
 
     /**
@@ -143,8 +152,8 @@ export class GbLogger implements LoggerInterface {
      *
      * @param {*} message - Whatever you'd like to log
      */
-    verbose (message: any): void {
-        this.logger.verbose(message);
+    static verbose (message: any): void {
+        GbLogger.logger.verbose(message);
     }
 
     /**
@@ -152,15 +161,15 @@ export class GbLogger implements LoggerInterface {
      *
      * @param {*} message - Whatever you'd like to log
      */
-    debug (message: any): void {
-        this.logger.debug(message);
+    static debug (message: any): void {
+        GbLogger.logger.debug(message);
     }
 
     /**
      *
      * @param {*} message - Whatever you'd like to log
      */
-    silly (message: any): void {
-        this.logger.silly(message);
+    static silly (message: any): void {
+        GbLogger.logger.silly(message);
     }
 }
