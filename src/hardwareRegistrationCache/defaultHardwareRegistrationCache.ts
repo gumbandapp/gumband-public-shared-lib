@@ -1,7 +1,7 @@
 import EventEmitter from 'events';
 import type { AnySource, ApiVersion, ApplicationInfo, AppRegistration, HardwareRegistration, PropertyRegistration, SystemInfo, SystemRegistration } from '../types/mqtt-api';
 import { LoggerInterface } from '../utils/gbLogger';
-import { ICacheLockByComponentId, IHardwareRegistrationCache } from './IHardwareRegistrationCache';
+import { ICacheLockByComponentId, IHardwareRegistrationCache, CachedPendingMessage } from './IHardwareRegistrationCache';
 import { waitMs } from '../utils';
 
 type PartialAppRegistration = Partial<AppRegistration> & Pick<AppRegistration, 'properties'>;
@@ -13,6 +13,8 @@ type PartialHardwareManifest = Partial<Omit<HardwareRegistration, 'app' | 'syste
 }
 
 type RegistrationHash = Record<string, PartialHardwareManifest>;
+
+const PENDING_MESSAGES_COUNT_MAX = 100;
 
 /**
  * Very basic locking mechanism with timeout support
@@ -97,6 +99,7 @@ export class HardwareRegistrationCache extends EventEmitter implements IHardware
     locks: {'system': DefaultCacheLock, 'app': DefaultCacheLock};
     protected registrationHash: RegistrationHash;
     logger: LoggerInterface;
+    pendingMessages: Record<string, CachedPendingMessage[]>;
 
     /**
      * HardwareRegistrationCache constructor
@@ -111,6 +114,7 @@ export class HardwareRegistrationCache extends EventEmitter implements IHardware
         this.ready = true;
         this.emit('ready');
         this.logger = logger;
+        this.pendingMessages = {};
     }
 
     /**
@@ -331,6 +335,7 @@ export class HardwareRegistrationCache extends EventEmitter implements IHardware
      */
     async clearAllCacheForComponentId (componentId: string): Promise<void> {
         delete this.registrationHash[componentId];
+        this.clearPendingMessages(componentId);
         this.logRegistrationHash();
     }
 
@@ -360,5 +365,50 @@ export class HardwareRegistrationCache extends EventEmitter implements IHardware
             this.logger.debug('In memory registration cache:');
             this.logger.debug(JSON.stringify(this.registrationHash));
         }
+    }
+
+    /**
+     * Cache a pending message for the given componentId to be handled later once the API version is known
+     *
+     * @param {string} componentId - the componentId for the pending message
+     * @param {string} topic - the topic for the pending message
+     * @param {Buffer} payload - the payload for the pending message
+     */
+    async cachePendingMessage (componentId: string, topic: string, payload: Buffer): Promise<void> {
+        if (Array.isArray(this.pendingMessages[componentId])) {
+            // Keep the list constrained
+            if (this.pendingMessages[componentId].length >= PENDING_MESSAGES_COUNT_MAX) {
+                this.pendingMessages[componentId].shift();
+            }
+            this.pendingMessages[componentId].push({ topic, payload });
+        } else {
+            this.pendingMessages[componentId] = [{ topic, payload }];
+        }
+    }
+
+    /**
+     * Get the next pending message from the cache for the given componentId
+     *
+     * @param {string} componentId - the componentId for the pending message
+     * @return {Promise<CachedPendingMessage | null>} the message, or null if there are no more messages to get
+     */
+    async getNextPendingMessage (componentId: string): Promise<CachedPendingMessage | null> {
+        const pendingMessage = this.pendingMessages[componentId]?.shift();
+
+        // If the list is empty clean up the entry
+        if (this.pendingMessages[componentId]?.length === 0) {
+            delete this.pendingMessages[componentId];
+        }
+
+        return pendingMessage ?? null;
+    }
+
+    /**
+     * Clear out any pending messages for the given componentId
+     *
+     * @param {string} componentId - the componentId for the pending message
+     */
+    async clearPendingMessages (componentId: string): Promise<void> {
+        delete this.pendingMessages[componentId];
     }
 }
