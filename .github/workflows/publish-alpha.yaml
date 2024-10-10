@@ -1,0 +1,44 @@
+name: Publish Gumband Shared Lib - Alpha
+on: workflow_dispatch
+
+permissions:
+  contents: write
+
+jobs:
+  lint:
+    name: Run Linter
+    uses: gumbandapp/gumband-workflows/.github/workflows/lint.yaml@main
+    secrets: inherit
+
+  depcheck:
+    name: Check Dependencies
+    uses: gumbandapp/gumband-workflows/.github/workflows/depcheck.yaml@main
+    secrets: inherit
+
+  audit:
+    name: Audit
+    uses: gumbandapp/gumband-workflows/.github/workflows/audit.yaml@main
+    secrets: inherit
+
+  build:
+    name: Build
+    uses: gumbandapp/gumband-workflows/.github/workflows/build.yaml@main
+    secrets: inherit
+
+  coverage:
+    name: Coverage
+    uses: gumbandapp/gumband-workflows/.github/workflows/coverage.yaml@main
+    secrets: inherit
+
+  test:
+    name: Test
+    uses: gumbandapp/gumband-workflows/.github/workflows/unit-test.yaml@main
+    secrets: inherit
+
+  publish-npm-package-alpha:
+    name: Publish SDK - alpha
+    needs: [lint, depcheck, audit, build, coverage, test]
+    uses: gumbandapp/gumband-workflows/.github/workflows/publish-npm-package.yaml@main
+    secrets: inherit
+    with:
+      tag: alpha
