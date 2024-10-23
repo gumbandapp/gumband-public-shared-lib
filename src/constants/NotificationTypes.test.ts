@@ -8,6 +8,7 @@ describe('NotificationTypes', () => {
             notify: 'notify',
             notify_op_mode: 'notify_op_mode',
             notify_connected: 'notify_connected',
+            notify_exhibit_health: 'notify_exhibit_health',
             notify_error_logs: 'notify_error_logs',
             notify_on_delete: 'notify_on_delete',
             notify_scene_changes: 'notify_scene_changes',
