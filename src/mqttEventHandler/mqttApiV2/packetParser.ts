@@ -150,7 +150,7 @@ export class V2PacketParser {
     }
 
     /**
-     * Validates the system type
+     * Validates the system type - allow any non-empty string for future development
      *
      * System type value must be one that we expect that we expect
      * @param {V2SystemType} systemType - unvalidated system type
@@ -160,10 +160,10 @@ export class V2PacketParser {
         if (typeof systemType !== 'string') {
             throw new Error('system type not a string');
         }
-        if (!V2SystemTypes.includes(systemType as V2SystemType)) {
-            throw new Error(`invalid system type. expected types: [${V2SystemTypes.join(', ')}]`);
+        if (systemType as string === '') {
+            throw new Error('invalid empty system type');
         }
-        return systemType as V2SystemType;
+        return systemType;
     }
 
     /**
