@@ -1,44 +1,243 @@
 name: Publish Gumband Shared Lib - Alpha
-on: workflow_dispatch
+on:
+  push:
+    branches:
+      - main
 
 permissions:
   contents: write
 
 jobs:
   lint:
-    name: Run Linter
-    uses: gumbandapp/gumband-workflows/.github/workflows/lint.yaml@main
-    secrets: inherit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+
+      - name: Populate .npmrc file with read-only token
+        run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_READ_ONLY_TOKEN }}" >> .npmrc
+
+      - name: Install dependencies
+        run: npm run setup:ci || npm ci
+
+      - name: Run linter
+        run: |
+          npm run lint
 
   depcheck:
-    name: Check Dependencies
-    uses: gumbandapp/gumband-workflows/.github/workflows/depcheck.yaml@main
-    secrets: inherit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+
+      - name: Populate .npmrc file with read-only token
+        run: echo "//registry.npmjs.org/:_authToken=${{ secrets.npm_read_only_token }}" >> .npmrc
+
+      - name: Install dependencies
+        run: npm run setup:ci || npm ci
+
+      - name: Install depcheck
+        run: npm install -g depcheck
+
+      - name: Run depcheck
+        run: |
+          depcheck
 
   audit:
-    name: Audit
-    uses: gumbandapp/gumband-workflows/.github/workflows/audit.yaml@main
-    secrets: inherit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+
+      - name: Populate .npmrc file with read-only token
+        run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_READ_ONLY_TOKEN }}" >> .npmrc
+
+      - name: Install dependencies
+        run: npm run setup:ci || npm ci
+
+      - name: Run Audit
+        run: |
+          npm audit || true
 
   build:
-    name: Build
-    uses: gumbandapp/gumband-workflows/.github/workflows/build.yaml@main
-    secrets: inherit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+
+      - name: Populate .npmrc file with read-only token
+        run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_READ_ONLY_TOKEN }}" >> .npmrc
+
+      - name: Install dependencies
+        run: npm run setup:ci || npm ci
+
+      - name: Run build
+        run: |
+          npm run build
 
   coverage:
-    name: Coverage
-    uses: gumbandapp/gumband-workflows/.github/workflows/coverage.yaml@main
-    secrets: inherit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-  test:
-    name: Test
-    uses: gumbandapp/gumband-workflows/.github/workflows/unit-test.yaml@main
-    secrets: inherit
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+
+      - name: Populate .npmrc file with read-only token
+        run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_READ_ONLY_TOKEN }}" >> .npmrc
+
+      - name: Install dependencies
+        run: npm run setup:ci || npm ci
+
+      - name: Run coverage
+        run: |
+          npm run coverage
+
+  unit-test:
+    name: Unit Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+
+      - name: Populate .npmrc file with read-only token
+        run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_READ_ONLY_TOKEN }}" >> .npmrc
+
+      - name: Install dependencies
+        run: npm run setup:ci || npm ci
+
+      - name: Run Unit Test
+        run: |
+          npm run test
 
   publish-npm-package-alpha:
     name: Publish SDK - alpha
-    needs: [lint, depcheck, audit, build, coverage, test]
-    uses: gumbandapp/gumband-workflows/.github/workflows/publish-npm-package.yaml@main
-    secrets: inherit
-    with:
-      tag: alpha
+    needs: [lint, depcheck, audit, build, coverage, unit-test]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Echo tag
+        run: echo "TAG=alpha" >> $GITHUB_ENV
+
+      - name: Get Gummy App Info
+        id: gummy-info
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ vars.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+
+      - name: Get GitHub App User ID
+        id: get-user-id
+        run: echo "user-id=$(gh api "/users/${{ steps.gummy-info.outputs.app-slug }}[bot]" --jq .id)" >> "$GITHUB_OUTPUT"
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+
+      - name: Set Git user
+        run: |
+          git config --global user.name '${{ steps.gummy-info.outputs.app-slug }}[bot]'
+          git config --global user.email '${{ steps.get-user-id.outputs.user-id }}+${{ steps.gummy-info.outputs.app-slug }}[bot]@users.noreply.github.com>'
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run npm ci
+        if: ${{ inputs.TAG != '' }}
+        run: npm ci
+
+      - name: Run npm build
+        if: ${{ inputs.TAG != '' }}
+        run: npm run build
+
+      - name: Extract branch name
+        run: echo "BRANCH_NAME=${{ github.head_ref || github.ref_name }} " >> $GITHUB_ENV
+
+      - name: Set Branch Clean name
+        run: echo "BRANCH_CLEAN_NAME=$(echo $BRANCH_NAME | sed 's/\//-/g')" >> $GITHUB_ENV
+
+      - name: Set npmrc file with publish token
+        run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_PUBLISH_TOKEN }}" >> .npmrc
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Bump node-version no tag
+        if: ${{ inputs.TAG == '' }}
+        run: npm --no-git-tag-version version patch
+
+      - name: Bump node-version alpha tag
+        if: ${{ inputs.TAG == 'alpha' }}
+        run: npm --no-git-tag-version version prerelease --preid=alpha-${{ env.BRANCH_CLEAN_NAME }}
+
+      - name: Bump node-version beta tag
+        if: ${{ inputs.TAG == 'beta' }}
+        run: npm --no-git-tag-version version prepatch --tag beta
+
+      - name: Bump node-version latest tag
+        if: ${{ inputs.TAG == 'latest' }}
+        run: npm --no-git-tag-version version patch --tag latest
+
+      - name: Add package.json and package-lock.json
+        run: git add package.json package-lock.json
+
+      - name: Set NEW_VERSION variable
+        run: echo NEW_VERSION=$(node -p "require('./package.json').version") >> $GITHUB_ENV
+
+      - name: Commit changes
+        run: git commit -m "Release PATCH version $NEW_VERSION [skip ci]"
+
+      - name: Publish package with tag
+        if: ${{ inputs.TAG != '' }}
+        run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_PUBLISH_TOKEN }}
+          EXTRA_ARGS: "--tag ${{ inputs.TAG }}"
+
+      - name: Publish package without tag
+        if: ${{ inputs.TAG == '' }}
+        run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_PUBLISH_TOKEN }}
+
+      - name: Tag the Release
+        run: git tag -am "Release PATCH version $NEW_VERSION" "$NEW_VERSION"
+
+      - name: Remove tag if exists
+        if: ${{ inputs.TAG != '' }}
+        run: git tag -d ${{ inputs.TAG }} || true
+
+      - name: Pust tag
+        if: ${{ inputs.TAG != '' }}
+        run: git push origin :refs/tags/${{ inputs.TAG }} || true
+
+      - name: Push changes
+        run: git push && git push --tags
