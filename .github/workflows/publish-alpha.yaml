@@ -1,8 +1,5 @@
 name: Publish Gumband Shared Lib - Alpha
-on:
-  push:
-    branches:
-      - main
+on: workflow_dispatch
 
 permissions:
   contents: write

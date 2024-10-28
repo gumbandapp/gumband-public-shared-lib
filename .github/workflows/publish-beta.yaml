@@ -1,8 +1,5 @@
 name: Publish Gumband Shared Lib - Beta
-on:
-  push:
-    branches:
-      - main
+on: workflow_dispatch
 
 permissions:
   contents: write
@@ -241,4 +238,3 @@ jobs:
 
       - name: Push changes
         run: git push && git push --tags
-
