@@ -165,11 +165,11 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Run npm ci
-        if: ${{ inputs.TAG != '' }}
+        if: ${{ env.TAG != '' }}
         run: npm ci
 
       - name: Run npm build
-        if: ${{ inputs.TAG != '' }}
+        if: ${{ env.TAG != '' }}
         run: npm run build
 
       - name: Extract branch name
@@ -188,19 +188,19 @@ jobs:
           registry-url: "https://registry.npmjs.org"
 
       - name: Bump node-version no tag
-        if: ${{ inputs.TAG == '' }}
+        if: ${{ env.TAG == '' }}
         run: npm --no-git-tag-version version patch
 
       - name: Bump node-version alpha tag
-        if: ${{ inputs.TAG == 'alpha' }}
+        if: ${{ env.TAG == 'alpha' }}
         run: npm --no-git-tag-version version prerelease --preid=alpha-${{ env.BRANCH_CLEAN_NAME }}
 
       - name: Bump node-version beta tag
-        if: ${{ inputs.TAG == 'beta' }}
+        if: ${{ env.TAG == 'beta' }}
         run: npm --no-git-tag-version version prepatch --tag beta
 
       - name: Bump node-version latest tag
-        if: ${{ inputs.TAG == 'latest' }}
+        if: ${{ env.TAG == 'latest' }}
         run: npm --no-git-tag-version version patch --tag latest
 
       - name: Add package.json and package-lock.json
@@ -213,14 +213,14 @@ jobs:
         run: git commit -m "Release PATCH version $NEW_VERSION [skip ci]"
 
       - name: Publish package with tag
-        if: ${{ inputs.TAG != '' }}
-        run: npm publish
+        if: ${{ env.TAG != '' }}
+        run: npm publish --dry-run
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_PUBLISH_TOKEN }}
-          EXTRA_ARGS: "--tag ${{ inputs.TAG }}"
+          EXTRA_ARGS: "--tag ${{ env.TAG }}"
 
       - name: Publish package without tag
-        if: ${{ inputs.TAG == '' }}
+        if: ${{ env.TAG == '' }}
         run: npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_PUBLISH_TOKEN }}
@@ -229,12 +229,12 @@ jobs:
         run: git tag -am "Release PATCH version $NEW_VERSION" "$NEW_VERSION"
 
       - name: Remove tag if exists
-        if: ${{ inputs.TAG != '' }}
-        run: git tag -d ${{ inputs.TAG }} || true
+        if: ${{ env.TAG != '' }}
+        run: git tag -d ${{ env.TAG }} || true
 
       - name: Pust tag
-        if: ${{ inputs.TAG != '' }}
-        run: git push origin :refs/tags/${{ inputs.TAG }} || true
+        if: ${{ env.TAG != '' }}
+        run: git push origin :refs/tags/${{ env.TAG }} || true
 
       - name: Push changes
         run: git push && git push --tags
