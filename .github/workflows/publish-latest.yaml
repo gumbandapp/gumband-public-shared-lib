@@ -3,10 +3,6 @@ on:
   push:
     branches:
       - main
-inputs:
-  TAG:
-    type: string
-    description: "The tag to publish the package with"
 
 permissions:
   contents: write
@@ -186,7 +182,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Echo tag
-        run: echo "TAG=${{ inputs.TAG }}" >> $GITHUB_ENV
+        run: echo "TAG=latest" >> $GITHUB_ENV
 
       - name: Get Gummy App Info
         id: gummy-info
