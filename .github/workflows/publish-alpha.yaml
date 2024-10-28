@@ -164,14 +164,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Run npm ci
-        if: ${{ env.TAG != '' }}
-        run: npm ci
-
-      - name: Run npm build
-        if: ${{ env.TAG != '' }}
-        run: npm run build
-
       - name: Extract branch name
         run: echo "BRANCH_NAME=${{ github.head_ref || github.ref_name }} " >> $GITHUB_ENV
 
@@ -187,21 +179,8 @@ jobs:
           node-version: "18"
           registry-url: "https://registry.npmjs.org"
 
-      - name: Bump node-version no tag
-        if: ${{ env.TAG == '' }}
-        run: npm --no-git-tag-version version patch
-
       - name: Bump node-version alpha tag
-        if: ${{ env.TAG == 'alpha' }}
         run: npm --no-git-tag-version version prerelease --preid=alpha-${{ env.BRANCH_CLEAN_NAME }}
-
-      - name: Bump node-version beta tag
-        if: ${{ env.TAG == 'beta' }}
-        run: npm --no-git-tag-version version prepatch --tag beta
-
-      - name: Bump node-version latest tag
-        if: ${{ env.TAG == 'latest' }}
-        run: npm --no-git-tag-version version patch --tag latest
 
       - name: Add package.json and package-lock.json
         run: git add package.json package-lock.json
@@ -217,13 +196,7 @@ jobs:
         run: npm publish --dry-run
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_PUBLISH_TOKEN }}
-          EXTRA_ARGS: "--tag ${{ env.TAG }}"
-
-      - name: Publish package without tag
-        if: ${{ env.TAG == '' }}
-        run: npm publish
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_PUBLISH_TOKEN }}
+          EXTRA_ARGS: "--tag alpha-${{ env.BRANCH_CLEAN_NAME }}"
 
       - name: Tag the Release
         run: git tag -am "Release PATCH version $NEW_VERSION" "$NEW_VERSION"
