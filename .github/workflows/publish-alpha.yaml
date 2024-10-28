@@ -192,11 +192,10 @@ jobs:
         run: git commit -m "Release PATCH version $NEW_VERSION [skip ci]"
 
       - name: Publish package with tag
-        if: ${{ env.TAG != '' }}
         run: npm publish --dry-run
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_PUBLISH_TOKEN }}
-          EXTRA_ARGS: "--tag alpha-${{ env.BRANCH_CLEAN_NAME }}"
+          EXTRA_ARGS: "--tag ${{ env.BRANCH_CLEAN_NAME }}"
 
       - name: Tag the Release
         run: git tag -am "Release PATCH version $NEW_VERSION" "$NEW_VERSION"
