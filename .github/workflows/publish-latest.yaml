@@ -33,14 +33,14 @@ jobs:
     uses: gumbandapp/gumband-workflows/.github/workflows/coverage.yaml@main
     secrets: inherit
 
-  test:
-    name: Test
+  unit-test:
+    name: Unit Test
     uses: gumbandapp/gumband-workflows/.github/workflows/unit-test.yaml@main
     secrets: inherit
 
   publish-npm-package-latest:
     name: Publish SDK - latest
-    needs: [lint, depcheck, audit, build, coverage, test]
+    needs: [lint, depcheck, audit, build, coverage, unit-test]
     uses: gumbandapp/gumband-workflows/.github/workflows/publish-npm-package.yaml@main
     secrets: inherit
     with:
