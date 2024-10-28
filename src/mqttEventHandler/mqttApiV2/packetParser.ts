@@ -5,7 +5,7 @@ import { isNativeError } from 'util/types';
 import Long from 'long';
 import struct, { DataType } from 'python-struct';
 import { GMBND_COLOR_FORMAT, GMBND_LED_FORMAT } from '.';
-import { V2ApiVersion, V2ApiVersions, V2ApplicationInfo, V2BasePropertyValue, V2JsonExtendedPropertyValue, V2JsonPropertyValue, V2Log, V2Platform, V2PropertyFormat, V2PropertyFormatInfo, V2PropertyRegistration, V2PropertyType, V2PropertyTypes, v2PropSetEndpoint, V2Source, V2SystemInfo, V2SystemType, V2SystemTypes, V2UnpackedPropertyValue } from '../../types';
+import { V2ApiVersion, V2ApiVersions, V2ApplicationInfo, V2BasePropertyValue, V2JsonExtendedPropertyValue, V2JsonPropertyValue, V2Log, V2Platform, V2PropertyFormat, V2PropertyFormatInfo, V2PropertyRegistration, V2PropertyType, V2PropertyTypes, v2PropSetEndpoint, V2Source, V2SystemInfo, V2SystemType, V2UnpackedPropertyValue } from '../../types';
 import { exhaustiveGuard } from '../../utils/usefulTS';
 import { PropertyFormatError } from '../../utils';
 
