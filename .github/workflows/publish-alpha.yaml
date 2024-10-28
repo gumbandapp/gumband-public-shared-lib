@@ -192,21 +192,13 @@ jobs:
         run: git commit -m "Release PATCH version $NEW_VERSION [skip ci]"
 
       - name: Publish package with tag
-        run: npm publish --dry-run ${{ env.EXTRA_ARGS }}
+        run: npm publish ${{ env.EXTRA_ARGS }}
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_PUBLISH_TOKEN }}
           EXTRA_ARGS: "--tag ${{ env.BRANCH_CLEAN_NAME }}"
 
       - name: Tag the Release
         run: git tag -am "Release PATCH version $NEW_VERSION" "$NEW_VERSION"
-
-      - name: Remove tag if exists
-        if: ${{ env.TAG != '' }}
-        run: git tag -d ${{ env.TAG }} || true
-
-      - name: Pust tag
-        if: ${{ env.TAG != '' }}
-        run: git push origin :refs/tags/${{ env.TAG }} || true
 
       - name: Push changes
         run: git push && git push --tags
