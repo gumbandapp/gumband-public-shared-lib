@@ -74,27 +74,6 @@ jobs:
         run: |
           npm audit || true
 
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "18"
-
-      - name: Populate .npmrc file with read-only token
-        run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_READ_ONLY_TOKEN }}" >> .npmrc
-
-      - name: Install dependencies
-        run: npm run setup:ci || npm ci
-
-      - name: Run build
-        run: |
-          npm run build
-
   coverage:
     runs-on: ubuntu-latest
     steps:
@@ -140,7 +119,7 @@ jobs:
 
   publish-npm-package-latest:
     name: Publish SDK - latest
-    needs: [lint, depcheck, audit, build, coverage, unit-test]
+    needs: [lint, depcheck, audit, coverage, unit-test]
     runs-on: ubuntu-latest
     steps:
       - name: Get Gummy App Info
@@ -164,12 +143,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Run npm ci
-        run: npm ci
-
-      - name: Run npm build
-        run: npm run build
-
       - name: Set npmrc file with publish token
         run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_PUBLISH_TOKEN }}" >> .npmrc
 
@@ -190,6 +163,12 @@ jobs:
 
       - name: Commit changes
         run: git commit -m "Release PATCH version $NEW_VERSION [skip ci]"
+
+      - name: Clean Install
+        run: npm ci
+
+      - name: Build
+        run: npm run build
 
       - name: Publish package with latest tag
         run: npm publish
