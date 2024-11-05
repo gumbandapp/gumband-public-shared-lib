@@ -1,9 +1,6 @@
-// Disabling the use of prcoess env in this file because we use it to do validation
 import { LOG_LEVELS, LogLevelType } from '../constants/LogLevels';
 
-
 export type ObjectValues<T> = T[keyof T];
-
 
 /**
  * Typescript exhaustive guard (See: https://www.google.com/search?q=typescript+exhaustive+guard)
