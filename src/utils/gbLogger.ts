@@ -1,5 +1,5 @@
 import { LogLevelType } from '../constants/LogLevels';
-/* eslint-disable @typescript-eslint/no-explicit-any, no-console */
+/* eslint-disable @typescript-eslint/no-explicit-any, no-console */ // We expect console statements in this module, it's a logger...
 export type VariousLoggerTransportInstancesArray = any[];
 
 export type GbLoggerConstructorObjectOpts = {
