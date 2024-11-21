@@ -2,22 +2,28 @@ import { LogLevelType } from '../constants/LogLevels';
 /* eslint-disable @typescript-eslint/no-explicit-any, no-console */ // We expect console statements in this module, it's a logger...
 export type VariousLoggerTransportInstancesArray = any[];
 
-export type GbLoggerConstructorObjectOpts = {
-    hideUtc?: boolean
+/** Options for the logger */
+export interface GbLoggerConstructorObjectOpts {
+    /** Hide the UTC timestamp? */
+    hideUtc?: boolean;
+    /** The log level */
     level?: LogLevelType;
+    /** The name of the logger */
     name?: string;
-    tz?: string; // A timezone string, when omitted timestamps will be UTC
-    logger?: LoggerInterface; // Injected logger instance
-};
+    /** A timezone string, when omitted timestamps will be UTC */
+    tz?: string;
+    /** The injected logger instance */
+    logger?: LoggerInterface;
+}
 
 export interface LoggerInterface {
-    error: (message: any) => void;
-    warn: (message: any) => void;
-    info: (message: any) => void;
-    http: (message: any) => void;
-    verbose: (message: any) => void;
-    debug: (message: any) => void;
-    silly: (message: any) => void;
+    error: (message: unknown) => void;
+    warn: (message: unknown) => void;
+    info: (message: unknown) => void;
+    http: (message: unknown) => void;
+    verbose: (message: unknown) => void;
+    debug: (message: unknown) => void;
+    silly: (message: unknown) => void;
     removeTransport?: (transport: any) => void;
     addTransport?: (transport: any) => void;
 }
@@ -28,9 +34,9 @@ export interface LoggerInterface {
 class DefaultLogger implements LoggerInterface {
     /**
      * @description Log an error message
-     * @param {any} message - The message to log
+     * @param {unknown} message - The message to log
      */
-    error (message: any): void {
+    error (message: unknown): void {
         if (typeof message === 'object') {
             console.error(JSON.stringify(message, null, 2));
         } else {
@@ -40,9 +46,9 @@ class DefaultLogger implements LoggerInterface {
 
     /**
      * @description Log a warning message
-     * @param {any} message - The message to log
+     * @param {unknown} message - The message to log
      */
-    warn (message: any): void {
+    warn (message: unknown): void {
         if (typeof message === 'object') {
             console.warn(JSON.stringify(message, null, 2));
         } else {
@@ -51,9 +57,9 @@ class DefaultLogger implements LoggerInterface {
     }
     /**
      * @description Log an info message
-     * @param {any} message - The message to log
+     * @param {unknown} message - The message to log
      */
-    info (message: any): void {
+    info (message: unknown): void {
         if (typeof message === 'object') {
             console.info(JSON.stringify(message, null, 2));
         } else {
@@ -63,9 +69,9 @@ class DefaultLogger implements LoggerInterface {
 
     /**
      * @description Log an http message
-     * @param {any} message - The message to log
+     * @param {unknown} message - The message to log
      */
-    http (message: any): void {
+    http (message: unknown): void {
         if (typeof message === 'object') {
             console.log(JSON.stringify(message, null, 2));
         } else {
@@ -75,9 +81,9 @@ class DefaultLogger implements LoggerInterface {
 
     /**
      * @description Log a verbose message
-     * @param {any} message - The message to log
+     * @param {unknown} message - The message to log
      */
-    verbose (message: any): void {
+    verbose (message: unknown): void {
         if (typeof message === 'object') {
             console.log(JSON.stringify(message, null, 2));
         } else {
@@ -87,9 +93,9 @@ class DefaultLogger implements LoggerInterface {
 
     /**
      * @description Log a debug message
-     * @param {any} message - The message to log
+     * @param {unknown} message - The message to log
      */
-    debug (message: any): void {
+    debug (message: unknown): void {
         if (typeof message === 'object') {
             console.debug(JSON.stringify(message, null, 2));
         } else {
@@ -99,9 +105,9 @@ class DefaultLogger implements LoggerInterface {
 
     /**
      * @description Log a silly message
-     * @param {any} message - The message to log
+     * @param {unknown} message - The message to log
      */
-    silly (message: any): void {
+    silly (message: unknown): void {
         if (typeof message === 'object') {
             console.log(JSON.stringify(message, null, 2));
         } else {
@@ -116,15 +122,7 @@ class DefaultLogger implements LoggerInterface {
 export class GbLogger implements LoggerInterface {
     private logger: LoggerInterface;
 
-    /**
-     * Default constructor
-     * @param {opts} opts - Options for the logger
-     * @param {opts} opts.hideUtc - Hide the UTC timestamp
-     * @param {opts} opts.level - The log level
-     * @param {opts} opts.name - The name of the logger
-     * @param {opts} opts.tz - The timezone
-     * @param {opts} opts.logger - The injected logger instance
-     */
+    /* eslint-disable-next-line require-jsdoc */
     constructor (opts?: GbLoggerConstructorObjectOpts) {
         if (
             opts?.hideUtc ||
@@ -139,57 +137,57 @@ export class GbLogger implements LoggerInterface {
 
     /**
      * @description Log an error message
-     * @param {any} message - The message to log
+     * @param {unknown} message - The message to log
      */
-    error (message: any): void {
+    error (message: unknown): void {
         this.logger.error(message);
     }
 
     /**
      * @description Log a warning message
-     * @param {any} message - The message to log
+     * @param {unknown} message - The message to log
      */
-    warn (message: any): void {
+    warn (message: unknown): void {
         this.logger.warn(message);
     }
 
     /**
      * @description Log an info message
-     * @param {any} message - The message to log
+     * @param {unknown} message - The message to log
      */
-    info (message: any): void {
+    info (message: unknown): void {
         this.logger.info(message);
     }
 
     /**
      * @description Log an http message
-     * @param {any} message - The message to log
+     * @param {unknown} message - The message to log
      */
-    http (message: any): void {
+    http (message: unknown): void {
         this.logger.http(message);
     }
 
     /**
      * @description Log a verbose message
-     * @param {any} message - The message to log
+     * @param {unknown} message - The message to log
      */
-    verbose (message: any): void {
+    verbose (message: unknown): void {
         this.logger.verbose(message);
     }
 
     /**
      * @description Log a debug message
-     * @param {any} message - The message to log
+     * @param {unknown} message - The message to log
      */
-    debug (message: any): void {
+    debug (message: unknown): void {
         this.logger.debug(message);
     }
 
     /**
      * @description Log a silly message
-     * @param {any} message - The message to log
+     * @param {unknown} message - The message to log
      */
-    silly (message: any): void {
+    silly (message: unknown): void {
         this.logger.silly(message);
     }
 
