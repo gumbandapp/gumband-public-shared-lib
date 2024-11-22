@@ -516,7 +516,6 @@ export class MqttApiV2 extends EventEmitter { // eslint-disable-line @typescript
      * @return {void}
      */
     private async completeSuccessfulRegistration (componentId: string, source: V2Source): Promise<void> {
-        this.logger.info(`${source} Registered!`);
         try {
             await this.cache.setRegistered(componentId, source, true);
         } catch (e) {
