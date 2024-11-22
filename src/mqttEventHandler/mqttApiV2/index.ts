@@ -615,7 +615,6 @@ export class MqttApiV2 extends EventEmitter { // eslint-disable-line @typescript
             // Pass Format and buffer to parser
             const unpackedPayload = this.packetParser.parsePropertyValue(payload, registeredProperty);
             const formattedPayload = this.packetParser.jsonFormatPropertyValue(unpackedPayload, registeredProperty);
-            this.logger.info(`format: "${registeredProperty.format}", unpackedPayload: ${JSON.stringify(unpackedPayload)}, jsonPayload: ${JSON.stringify(formattedPayload)}`);
             this.emit(V2_EVENTS.PROP_UPDATE, {
                 componentId,
                 source,
