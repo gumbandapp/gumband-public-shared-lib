@@ -163,7 +163,14 @@ export class MQTTEventHandler extends EventEmitter {
                 this.logger.debug(`Received ${topic}: ${JSON.stringify(jsonPayload)}`);
 
                 // Validate API Version
-                const apiVer = jsonPayload?.api_ver;
+                let apiVer = jsonPayload?.api_ver;
+
+                // If the version is a string, but matches a version number exactly that's fine
+                if (typeof apiVer == 'string')
+                {
+                    apiVer = Number(apiVer);
+                }
+
                 if (isApiVersion(apiVer)) {
                     return apiVer;
                 } else {
