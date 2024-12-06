@@ -516,7 +516,6 @@ export class MqttApiV2 extends EventEmitter { // eslint-disable-line @typescript
      * @return {void}
      */
     private async completeSuccessfulRegistration (componentId: string, source: V2Source): Promise<void> {
-        this.logger.info(`${source} Registered!`);
         try {
             await this.cache.setRegistered(componentId, source, true);
         } catch (e) {
@@ -615,7 +614,6 @@ export class MqttApiV2 extends EventEmitter { // eslint-disable-line @typescript
             // Pass Format and buffer to parser
             const unpackedPayload = this.packetParser.parsePropertyValue(payload, registeredProperty);
             const formattedPayload = this.packetParser.jsonFormatPropertyValue(unpackedPayload, registeredProperty);
-            this.logger.info(`format: "${registeredProperty.format}", unpackedPayload: ${JSON.stringify(unpackedPayload)}, jsonPayload: ${JSON.stringify(formattedPayload)}`);
             this.emit(V2_EVENTS.PROP_UPDATE, {
                 componentId,
                 source,
