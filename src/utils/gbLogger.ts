@@ -1,166 +1,221 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import moment from 'moment-timezone';
-import winston, { Logger as WinstonLogger, transports as WinstonTransports } from 'winston';
-import { type LogLevelType, LOG_LEVELS } from '../constants/LogLevels';
+import { LogLevelType } from '../constants/LogLevels';
+/* eslint-disable @typescript-eslint/no-explicit-any, no-console */ // We expect console statements in this module, it's a logger...
+export type VariousLoggerTransportInstancesArray = any[];
 
-export type VariousWinstonTransportInstancesArray = (
-    WinstonTransports.ConsoleTransportInstance |
-    WinstonTransports.FileTransportInstance |
-    WinstonTransports.HttpTransportInstance |
-    WinstonTransports.StreamTransportInstance)[];
-
-export type GbLoggerConstructorObjectOpts = {
-    hideUtc?: boolean
+/** Options for the logger */
+export interface GbLoggerConstructorObjectOpts {
+    /** Hide the UTC timestamp? */
+    hideUtc?: boolean;
+    /** The log level */
     level?: LogLevelType;
+    /** The name of the logger */
     name?: string;
-    transports?: VariousWinstonTransportInstancesArray;
-    tz?: string; // A timezone string, when omitted timestamps will be UTC
-};
-
+    /** A timezone string, when omitted timestamps will be UTC */
+    tz?: string;
+    /** The injected logger instance */
+    logger?: LoggerInterface;
+}
 
 export interface LoggerInterface {
-    error: (message: any) => void;
-    warn: (message: any) => void;
-    info: (message: any) => void;
-    http: (message: any) => void;
-    verbose: (message: any) => void;
-    debug: (message: any) => void;
-    silly: (message: any) => void;
+    error: (message: unknown) => void;
+    warn: (message: unknown) => void;
+    info: (message: unknown) => void;
+    http: (message: unknown) => void;
+    verbose: (message: unknown) => void;
+    debug: (message: unknown) => void;
+    silly: (message: unknown) => void;
+    removeTransport?: (transport: any) => void;
+    addTransport?: (transport: any) => void;
 }
+
 /**
- * A logger class that wraps winston
+ * A default logger implementation that mimics the previous behavior
+ */
+class DefaultLogger implements LoggerInterface {
+    /**
+     * @description Log an error message
+     * @param {unknown} message - The message to log
+     */
+    error (message: unknown): void {
+        if (typeof message === 'object') {
+            console.error(JSON.stringify(message, null, 2));
+        } else {
+            console.error(message);
+        }
+    }
+
+    /**
+     * @description Log a warning message
+     * @param {unknown} message - The message to log
+     */
+    warn (message: unknown): void {
+        if (typeof message === 'object') {
+            console.warn(JSON.stringify(message, null, 2));
+        } else {
+            console.warn(message);
+        }
+    }
+    /**
+     * @description Log an info message
+     * @param {unknown} message - The message to log
+     */
+    info (message: unknown): void {
+        if (typeof message === 'object') {
+            console.info(JSON.stringify(message, null, 2));
+        } else {
+            console.info(message);
+        }
+    }
+
+    /**
+     * @description Log an http message
+     * @param {unknown} message - The message to log
+     */
+    http (message: unknown): void {
+        if (typeof message === 'object') {
+            console.log(JSON.stringify(message, null, 2));
+        } else {
+            console.log(message);
+        }
+    }
+
+    /**
+     * @description Log a verbose message
+     * @param {unknown} message - The message to log
+     */
+    verbose (message: unknown): void {
+        if (typeof message === 'object') {
+            console.log(JSON.stringify(message, null, 2));
+        } else {
+            console.log(message);
+        }
+    }
+
+    /**
+     * @description Log a debug message
+     * @param {unknown} message - The message to log
+     */
+    debug (message: unknown): void {
+        if (typeof message === 'object') {
+            console.debug(JSON.stringify(message, null, 2));
+        } else {
+            console.debug(message);
+        }
+    }
+
+    /**
+     * @description Log a silly message
+     * @param {unknown} message - The message to log
+     */
+    silly (message: unknown): void {
+        if (typeof message === 'object') {
+            console.log(JSON.stringify(message, null, 2));
+        } else {
+            console.log(message);
+        }
+    }
+}
+
+/**
+ * A logger class that wraps the injected logger
  */
 export class GbLogger implements LoggerInterface {
-    private logger: WinstonLogger;
+    private logger: LoggerInterface;
 
-    /**
-     * Default constructor
-     * @param {opts} opts - Options for the logger
-     * @param {string} opts.name - A short name for the logger to be printed with each log message
-     * @param {string} [opts.level='info'] - The default log level for this logger, see https://github.com/winstonjs/winston?tab=readme-ov-file#logging-levels
-     * @param {string} [opts.tz='UTC'] - The timezone identifier. See https://en.wikipedia.org/wiki/List_of_tz_database_time_zones for valid values
-     * @param {boolean} [opts.hideUtc=false] - If true, the UTC timestamp will not be printed in the log message
-     * @param {VariousWinstonTransportInstancesArray} [opts.transports=[]] - Additional winston transports to add during instantiation
-     */
+    /* eslint-disable-next-line require-jsdoc */
     constructor (opts?: GbLoggerConstructorObjectOpts) {
-        // Create a default console transport
-
-        const hideUtc = opts?.hideUtc || false;
-        const level = opts?.level || LOG_LEVELS.INFO;
-        const name = opts?.name || '';
-        const transports = opts?.transports || [];
-        const tz = opts?.tz || 'UTC';
-
-        // Check that TZ is one that moment-timezone can handle
-        if (!moment.tz.names().includes(tz)) {
-            // eslint-disable-next-line no-console -- This is a logger, so console is fine
-            console.error(`Invalid timezone: ${tz}, see: https://github.com/moment/moment-timezone/blob/develop/data/packed/latest.json for valid values`);
+        if (
+            opts?.hideUtc ||
+            opts?.level ||
+            opts?.name ||
+            opts?.tz
+        ) {
+            console.warn('Opts hideUtc, level, name and tz are not supported anymore, instead you should inject your logger instance.');
         }
-
-        // Create the default console transport that will be loaded into the logger
-        const gbDefaultConsoleTransport = new winston.transports.Console({
-            format: winston.format.combine(
-                winston.format.colorize(),
-                winston.format.label({ label: name }),
-                winston.format.timestamp(),
-                winston.format.printf(({ timestamp, level, message, label }) => {
-                    const localTime = moment(timestamp).tz(tz).format('YYYY-MM-DD HH:mm:ss z');
-                    const utcTime = moment(timestamp).utc().format('YYYY-MM-DD HH:mm:ss [UTC]');
-                    const utcFormatted = `(${utcTime}) `;
-                    const maybeUtcValue = hideUtc ? '' : utcFormatted;
-                    const maybeLabelValue = label ? `[${label}] ` : '';
-                    if (utcTime === 'Invalid date' || tz === 'UTC') {
-                        return `${maybeUtcValue}${maybeLabelValue}${level}: ${message}`;
-                    } else {
-                        return `${localTime} ${maybeUtcValue}[${label}] ${level}: ${message}`;
-                    }
-                }),
-            ),
-        });
-
-        // Create the logger instance with default and additional transports
-        this.logger = winston.createLogger({
-            level: level || 'info',
-            levels: winston.config.npm.levels,
-            transports: [gbDefaultConsoleTransport, ...transports],
-        });
+        this.logger = opts?.logger || new DefaultLogger();
     }
 
     /**
-     * Add a new transport to the logger
-     *
-     * @param {any} transport - A winston transport instance
+     * @description Log an error message
+     * @param {unknown} message - The message to log
      */
-    addTransport (transport: any): void {
-        this.logger.add(transport);
-    }
-
-    /**
-     * Remove a transport from the logger
-     *
-     * @param {any} transport - A winston transport instance
-     */
-    removeTransport (transport: any): void {
-        this.logger.remove(transport);
-    }
-
-    /**
-     * Send an error log
-     *
-     * @param {*} message - Whatever you'd like to log
-     */
-    error (message: any): void {
+    error (message: unknown): void {
         this.logger.error(message);
     }
+
     /**
-     * Send a warn log
-     *
-     * @param {*} message - Whatever you'd like to log
+     * @description Log a warning message
+     * @param {unknown} message - The message to log
      */
-    warn (message: any): void {
+    warn (message: unknown): void {
         this.logger.warn(message);
     }
 
     /**
-     * Send an info log
-     *
-     * @param {*} message - Whatever you'd like to log
+     * @description Log an info message
+     * @param {unknown} message - The message to log
      */
-    info (message: any): void {
+    info (message: unknown): void {
         this.logger.info(message);
     }
 
     /**
-     *
-     * @param {*} message - Whatever you'd like to log
+     * @description Log an http message
+     * @param {unknown} message - The message to log
      */
-    http (message: any): void {
+    http (message: unknown): void {
         this.logger.http(message);
     }
 
     /**
-     * Send a verbose log
-     *
-     * @param {*} message - Whatever you'd like to log
+     * @description Log a verbose message
+     * @param {unknown} message - The message to log
      */
-    verbose (message: any): void {
+    verbose (message: unknown): void {
         this.logger.verbose(message);
     }
 
     /**
-     * Send a debug log
-     *
-     * @param {*} message - Whatever you'd like to log
+     * @description Log a debug message
+     * @param {unknown} message - The message to log
      */
-    debug (message: any): void {
+    debug (message: unknown): void {
         this.logger.debug(message);
     }
 
     /**
-     *
-     * @param {*} message - Whatever you'd like to log
+     * @description Log a silly message
+     * @param {unknown} message - The message to log
      */
-    silly (message: any): void {
+    silly (message: unknown): void {
         this.logger.silly(message);
+    }
+
+    /**
+     * @description addTransport - Add a transport to the logger, (if the logger supports that method)
+     * @param {any} transport - The transport to add
+     * @return {void}
+     * @deprecated This method is deprecated and will be removed in the future
+     */
+    addTransport (transport: any): void {
+        if (this.logger.addTransport) {
+            this.logger.addTransport(transport);
+        } else {
+            console.warn('Logger does not support addTransport anymore.');
+        }
+    }
+
+    /**
+     * @description removeTransport - Remove a transport from the logger, (if the logger supports that method)
+     * @param {any} transport - The transport to remove
+     * @return {void}
+     git * @deprecated This method is deprecated and will be removed in the future
+     */
+    removeTransport (transport: any): void {
+        if (this.logger.removeTransport) {
+            this.logger.removeTransport(transport);
+        } else {
+            console.warn('Logger does not support removeTransport anymore.');
+        }
     }
 }
