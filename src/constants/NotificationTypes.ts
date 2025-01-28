@@ -8,4 +8,4 @@ export const NOTIFICATION_TYPES = {
     notify_scene_changes: 'notify_scene_changes',
     notify_hardware_change: 'notify_hardware_change',
     notify_hardware_notification: 'notify_hardware_notification',
-};
+} as const;
