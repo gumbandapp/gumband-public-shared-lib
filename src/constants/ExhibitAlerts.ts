@@ -1,7 +1,7 @@
 import type { ObjectValues } from '../utils';
-import { NOTIFICATION_TYPES } from './NotificationTypes';
+import { NOTIFICATION_TYPES, type NotificationType } from './NotificationTypes';
 
-export const EXHIBIT_ALERT_TYPES = {
+export const EXHIBIT_ALERT_TYPES: Record<string, NotificationType> = {
     NOTIFY: NOTIFICATION_TYPES.notify,
     NOTIFY_CONNECTED: NOTIFICATION_TYPES.notify_connected,
     NOTIFY_EXHIBIT_HEALTH: NOTIFICATION_TYPES.notify_exhibit_health,
