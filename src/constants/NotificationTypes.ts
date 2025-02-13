@@ -1,3 +1,5 @@
+import type { ObjectValues } from '../utils';
+
 export const NOTIFICATION_TYPES = {
     notify: 'notify',
     notify_op_mode: 'notify_op_mode',
@@ -9,3 +11,4 @@ export const NOTIFICATION_TYPES = {
     notify_hardware_change: 'notify_hardware_change',
     notify_hardware_notification: 'notify_hardware_notification',
 } as const;
+export type NotificationType = ObjectValues<typeof NOTIFICATION_TYPES>;
