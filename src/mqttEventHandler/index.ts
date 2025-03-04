@@ -11,6 +11,7 @@ import { exhaustiveGuard } from '../utils/usefulTS';
 import { MqttApiV2 } from './mqttApiV2';
 
 const HANDLE_PENDING_MESSAGES_TIMEOUT_MS = 3 * 1000;
+const DEFAULT_MQTT_API_VERSION = 2 as const;
 
 /**
  * MQTT Event Handler class - previously known as the Hardware Event Handler in the GBTT Service
@@ -77,7 +78,14 @@ export class MQTTEventHandler extends EventEmitter {
         if (cachedApiVersion === undefined) {
             if (isMQTTInitialRegistrationTopic(topic)) {
                 // Handle the registration message
-                const parsedApiVersion = await this.getApiVersionFromRegistrationTopic(componentId, topic, payload);
+                let parsedApiVersion = DEFAULT_MQTT_API_VERSION;
+
+                try {
+                    parsedApiVersion = await this.getApiVersionFromRegistrationTopic(componentId, topic, payload);
+                } catch (e) {
+                    this.logger.error(`Failed to get API version from registration topic: ${topic}. Defaulting to ${DEFAULT_MQTT_API_VERSION}`);
+                }
+
                 await this.handleVersionedMessage(componentId, topic, payload, parsedApiVersion);
 
                 // Handle any pending messages that came in before the API version was available
