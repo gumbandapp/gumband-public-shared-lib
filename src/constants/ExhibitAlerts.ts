@@ -12,3 +12,9 @@ export const EXHIBIT_ALERT_TYPES: Record<string, NotificationType> = {
 export type ExhibitAlertType = ObjectValues<
   typeof EXHIBIT_ALERT_TYPES
 >;
+
+export const isExhibitAlertType = (
+    value: unknown,
+): value is ExhibitAlertType => {
+    return Object.values(EXHIBIT_ALERT_TYPES).includes(value as ExhibitAlertType);
+};
