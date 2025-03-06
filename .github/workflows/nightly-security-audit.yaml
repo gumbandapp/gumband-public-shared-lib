@@ -1,0 +1,17 @@
+name: Public Shared Lib - Nightly Security Audit
+on:
+  schedule:
+    - cron:
+        "0 0 * * *"
+        # | | | | |
+        # | | | | +--- Day of the Week (0 = Sunday, 1 = Monday, ..., 6 = Saturday)
+        # | | | +----- Month (1 - 12)
+        # | | +------- Day of the Month (1 - 31)
+        # | +--------- Hour (0 - 23)
+        # +----------- Minute (0 - 59)
+  workflow_dispatch:
+jobs:
+  Run-Audit:
+    name: Run Nightly Security Audit
+    uses: gumbandapp/gumband-workflows/.github/workflows/nightly-security-audit.yaml@main
+    secrets: inherit
