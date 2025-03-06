@@ -10,6 +10,8 @@
     /* JavaScript Support */
     "allowJs": true /* Allow JavaScript files to be a part of your program. Use the 'checkJS' option to get errors from these files. */,
     "checkJs": true /* Enable error reporting in type-checked JavaScript files. */,
+    "sourceMap": true /* Create source map files for emitted JavaScript files. */,
+    "inlineSources": true /* Include the source code in the source maps inside the .map files. */,
 
     /* Emit */
     "declaration": true /* Generate .d.ts files from TypeScript and JavaScript files in your project. */,
